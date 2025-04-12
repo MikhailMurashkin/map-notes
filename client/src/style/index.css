@@ -87,6 +87,8 @@ button:hover {
 .storyImages {
   height: 300px;
   width: 460px;
+  background-color: #afd4a0;
+  align-self: center;
 }
 
 .storyBlock {
@@ -95,6 +97,12 @@ button:hover {
   display: flex;
   flex-direction: column;
   row-gap: 10px;
+  align-self: center;
+  /* background-color: blueviolet; */
+  width: 500px;
+  max-width: 500px;
+  overflow-x: hidden;
+  position: relative;
 }
 
 .storyName {
@@ -134,4 +142,17 @@ button:hover {
   /* background-color: aqua; */
   text-wrap: wrap;
   word-wrap: break-word;
+}
+
+.storyDate {
+  color: rgb(117, 117, 117);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.backButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  cursor: pointer;
 }
