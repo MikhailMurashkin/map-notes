@@ -2,7 +2,8 @@ import React from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 
-// import { createGroup, getGroupsByUserId, joinGroupByCode } from './modules/Api'
+import { AuthContext } from './modules/AuthContext'
+import { createStoryApi, getStoriesApi } from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationControl,
@@ -14,49 +15,52 @@ import { Button, Form, Image, Carousel } from 'react-bootstrap';
 import Pin from './assets/pin'
 
 
-let stories = [
-    {
-        authorId: "abc",
-        authorName: "Name",
-        storyId: "storyid1",
-        storyName: "Story Name",
-        storyText: "Story text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque tincidunt volutpat nisl ut suscipit. Quisque porta volutpat pretium. Integer a felis vel felis pretium auctor et vel nisi. Donec vulputate elementum varius. Maecenas et purus a quam vehicula luctus. Quisque eget rutrum dui, a consequat sem. Phasellus sodales nisi diam, in fermentum neque laoreet quis. Sed porta ultricies porttitor. Vestibulum id vehicula neque. Curabitur maximus mi odio, sed semper orci tempor vitae. Nunc eget porttitor nulla, non ultricies neque. Vestibulum bibendum nisl non tristique commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        storyImages: ["https://s3.stroi-news.ru/img/krasivie-kartinki-peizazh-1.jpg", "https://avianity.ru/wp-content/uploads/moskva.jpg"],
-        date: new Date(),
-        longitude: 37.64909959453797,
-        latitude: 55.75413746010946
-    },
-    {
-        authorId: "abcde",
-        authorName: "Misha",
-        storyId: "storyid2",
-        storyName: "Story Misha Name",
-        storyText: "Story text Misha",
-        storyImages: ["link 1", "link 2"],
-        date: new Date(),
-        longitude: 37.91481238104444,
-        latitude: 55.962609794694515
-    },
-    {
-        authorId: "qwerty",
-        authorName: "Varya",
-        storyId: "storyid3",
-        storyName: "Story Varya Name",
-        storyText: "Story text Varya",
-        storyImages: ["link 1", "link 2"],
-        date: new Date(),
-        longitude: 37.34458861624242,
-        latitude: 55.81647271890208
-    }
-]
+// let stories = [
+//     {
+//         authorId: "abc",
+//         authorName: "Name",
+//         storyId: "storyid1",
+//         storyName: "Story Name",
+//         storyText: "Story text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque tincidunt volutpat nisl ut suscipit. Quisque porta volutpat pretium. Integer a felis vel felis pretium auctor et vel nisi. Donec vulputate elementum varius. Maecenas et purus a quam vehicula luctus. Quisque eget rutrum dui, a consequat sem. Phasellus sodales nisi diam, in fermentum neque laoreet quis. Sed porta ultricies porttitor. Vestibulum id vehicula neque. Curabitur maximus mi odio, sed semper orci tempor vitae. Nunc eget porttitor nulla, non ultricies neque. Vestibulum bibendum nisl non tristique commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+//         storyImages: ["https://s3.stroi-news.ru/img/krasivie-kartinki-peizazh-1.jpg", "https://avianity.ru/wp-content/uploads/moskva.jpg"],
+//         date: new Date(),
+//         longitude: 37.64909959453797,
+//         latitude: 55.75413746010946
+//     },
+//     {
+//         authorId: "abcde",
+//         authorName: "Misha",
+//         storyId: "storyid2",
+//         storyName: "Story Misha Name",
+//         storyText: "Story text Misha",
+//         storyImages: ["link 1", "link 2"],
+//         date: new Date(),
+//         longitude: 37.91481238104444,
+//         latitude: 55.962609794694515
+//     },
+//     {
+//         authorId: "qwerty",
+//         authorName: "Varya",
+//         storyId: "storyid3",
+//         storyName: "Story Varya Name",
+//         storyText: "Story text Varya",
+//         storyImages: ["link 1", "link 2"],
+//         date: new Date(),
+//         longitude: 37.34458861624242,
+//         latitude: 55.81647271890208
+//     }
+// ]
 
 
 const MapPage = () => {
+    const { login, author, logout } = useContext(AuthContext);
+
     const {mymap} = useMap()
 
     const [searchParams, setSearchParams] = useSearchParams()
 
-    const [popupInfo, setPopupInfo] = useState(null)
+    const [stories, setStories] = useState([])
+
     const [showPanel, setShowPanel] = useState(false)
     const [placeNewMarker, setPlaceNewMarker] = useState(false)
     const [mapDrag, setMapDrag] = useState(false)
@@ -73,34 +77,29 @@ const MapPage = () => {
     const [showStory, setShowStory] = useState(false)
     const [storyShowed, setStoryShowed] = useState(null)
 
+    const [lastCenter, setLastCenter] = useState(false)
+    const [lastZoom, setLastZoom] = useState(false)
+    const [zoomed, setZoomed] = useState(false)
+
+    
+    const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(false)
+
 
     useEffect(() => {
         async function fetchData(){
-            console.log(searchParams)
+            let stories = await getStoriesApi()
+            setStories(stories)
             setSearchParams({'authorId': 'abc'})
+            
         }
         fetchData()
     }, [])
 
-    let markers = [
-        {
-            latitude: 55.75,
-            longitude: 37.61
-        }
-    ]
 
     function createStory () {
-        let story = {
-            authorId: "test",
-            authorName: "Varya",
-            storyName: newStoryName,
-            storyText: newStoryText,
-            storyImages: newStoryImages,
-            date: new Date(),
-            longitude: newMarker?.lng,
-            latitude: newMarker?.lat
-        }
-        console.log(story)
+        createStoryApi(newStoryName, newStoryText, newStoryImages,
+            newMarker.lng, newMarker.lat
+        )
     }
 
 
@@ -125,6 +124,11 @@ const MapPage = () => {
                     return
                 }
 
+                console.log("NEW")
+                
+                setLastCenter(mymap.getCenter())
+                setLastZoom(mymap.getZoom())
+
                 setNewMarker({
                     lat: c.lngLat.lat,
                     lng: c.lngLat.lng
@@ -138,7 +142,7 @@ const MapPage = () => {
                 mymap.flyTo({
                     center: [c.lngLat.lng, c.lngLat.lat],
                     zoom: zoomValue > 15 ? zoomValue : 15,
-                    speed: 1,
+                    speed: 1.3,
                     curve: 1
                 })
 
@@ -152,11 +156,17 @@ const MapPage = () => {
             onDragEnd={() => {
                 setMapDrag(false)
             }}
+
+            onZoomEnd={() => {
+                if (mymap.getZoom() != 15) {
+                    setZoomed(true)
+                }
+            }}
             
             >
                 <GeolocateControl />
                 <ScaleControl />
-                <FullscreenControl />
+                {/* <FullscreenControl /> */}
                 <NavigationControl />
 
                 {stories.map((story, key) => {
@@ -168,19 +178,30 @@ const MapPage = () => {
                             anchor="bottom"
                             onClick={e => {
                                 e.originalEvent.stopPropagation()
-                                console.log(story)
-                                setShowStory(true)
-                                setStoryShowed(story)
+
+                                setSelectedMarkerIndex(key)
+
+
+                                setZoomed(false)
+                                
+                                if(!showStory) {
+                                    setLastCenter(mymap.getCenter())
+                                    setLastZoom(mymap.getZoom())
+                                }
                                 
                                 mymap.flyTo({
                                     center: [story.longitude, story.latitude],
                                     zoom: 15,
-                                    speed: 1.2,
+                                    speed: 1.3,
                                     curve: 1
                                 })
+                                setZoomed(false)
+
+                                setShowStory(true)
+                                setStoryShowed(story)
                             }}
                         >
-                            <Pin />
+                            <Pin selected={selectedMarkerIndex == key} />
                         </Marker>
                     )
                 })}
@@ -197,7 +218,7 @@ const MapPage = () => {
                         setShowPanel(true)
                     }}
                     >
-                    <Pin />
+                    <Pin selected={true} />
                 </Marker>}
                 {/* <Popup
                     anchor="top"
@@ -233,6 +254,7 @@ const MapPage = () => {
                 <div className="profilePic">
                     <Image src="/profile-icon.png" roundedCircle fluid 
                     style={{cursor: "pointer"}}/>
+                    {author.name}
                 </div>
             </div>
             {/* <button className='mapButton'>Создать историю</button> */}
@@ -251,7 +273,8 @@ const MapPage = () => {
                     </div>
                     <div className='inputBlock'>
                         <Form.Label>Фотографии</Form.Label>
-                        <Form.Control  />
+                        <Form.Control onChange={e => setNewStoryImages(e.target.value)}
+                        value={"https://avatars.mds.yandex.net/get-vertis-journal/4220003/obl_morya.jpg_1709481724185/orig"} />
                     </div>
                     <div className="newStoryButtons">
                         <button onClick={createStory}>
@@ -265,9 +288,9 @@ const MapPage = () => {
                             setNewStoryImages([])
 
                             mymap.flyTo({
-                                center: [37.61, 55.75],
-                                zoom: 9,
-                                speed: 1,
+                                center: lastCenter,
+                                zoom: lastZoom,
+                                speed: 1.3,
                                 curve: 1
                             })
                         }}>
@@ -279,6 +302,19 @@ const MapPage = () => {
             }
             {(showStory && storyShowed) &&
             <div className="storyBlock">
+                <button className='backButton' onClick={() => {
+                    if (!zoomed) {
+                        console.log(lastCenter)
+                        mymap.flyTo({
+                            center: lastCenter,
+                            zoom: lastZoom
+                        })
+                    }
+                    setShowStory(false)
+                    setSelectedMarkerIndex(-1)
+                }}>
+                    BACK
+                </button>
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>

@@ -1,49 +1,48 @@
 const API_URL = 'http://localhost:3000';
 
-export const createGroup = async (groupName, groupDescription) => {
-  const response = await fetch(`${API_URL}/groups/createGroup`, {
+export const createStoryApi = async (storyName, storyText, storyImages, longitude, latitude) => {
+  const response = await fetch(`${API_URL}/stories/createStory`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${localStorage.getItem("token")}`,
     },
-    body: JSON.stringify({ 
-      groupName, groupDescription
-    }),
+    body: JSON.stringify({
+      storyName, storyText, storyImages, longitude, latitude
+    })
   })
 
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.message || 'Не удалось создать группу')
+    throw new Error(data.message || 'Не удалось создать иторию')
   }
-
-  window.location = `group/${data.groupId}`
 
   return data;
 }
 
-export const getGroupsByUserId = async () => {
-  const response = await fetch(`${API_URL}/groups/getGroupsByUserId`, {
-    method: 'GET',
+export const getStoriesApi = async () => {
+  const response = await fetch(`${API_URL}/stories/getStories`, {
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem("token")}`,
     },
-  });
+    body: JSON.stringify({
+      
+    })
+  })
 
-  const data = await response.json();
-
-  console.log(data)
+  const data = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.message || 'Не удалось получить список групп')
+    throw new Error(data.message || 'Не удалось получить список историй')
   }
 
   return data
 }
 
 export const getGroupInfoById = async (groupId) => {
-  const response = await fetch(`${API_URL}/groups/getGroupInfoById`, {
+  const response = await fetch(`${API_URL}/stories/getGroupInfoById`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -52,7 +51,7 @@ export const getGroupInfoById = async (groupId) => {
     body: JSON.stringify({ 
       groupId
     }),
-  });
+  })
 
   const data = await response.json()
   console.log(data)
@@ -65,7 +64,7 @@ export const getGroupInfoById = async (groupId) => {
 }
 
 export const updateGroupDescription = async (description, groupId) => {
-  const response = await fetch(`${API_URL}/groups/updateGroupDescription`, {
+  const response = await fetch(`${API_URL}/stories/updateGroupDescription`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -90,7 +89,7 @@ export const updateGroupDescription = async (description, groupId) => {
 
 
 export const joinGroupByCode = async (inviteCode) => {
-  const response = await fetch(`${API_URL}/groups/joinGroupByCode`, {
+  const response = await fetch(`${API_URL}/stories/joinGroupByCode`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -113,7 +112,7 @@ export const joinGroupByCode = async (inviteCode) => {
 }
 
 export const startGroupSearch = async (groupId) => {
-  const response = await fetch(`${API_URL}/groups/startGroupSearch`, {
+  const response = await fetch(`${API_URL}/stories/startGroupSearch`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -136,7 +135,7 @@ export const startGroupSearch = async (groupId) => {
 }
 
 export const getFoundGroupInfo = async (foundGroupId) => {
-  const response = await fetch(`${API_URL}/groups/getFoundGroupInfo`, {
+  const response = await fetch(`${API_URL}/stories/getFoundGroupInfo`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -159,7 +158,7 @@ export const getFoundGroupInfo = async (foundGroupId) => {
 }
 
 export const foundGroupDecision = async (myGroupId, decision) => {
-  const response = await fetch(`${API_URL}/groups/foundGroupDecision`, {
+  const response = await fetch(`${API_URL}/stories/foundGroupDecision`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

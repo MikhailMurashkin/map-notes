@@ -13,7 +13,7 @@ const protect = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded.id;
+        req.author = decoded.id;
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Not authorized, token failed' });

@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import mongoose from 'mongoose'
 import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
-// import groupRoutes from './routes/groupRoutes.js'
+import storyRoutes from './routes/storyRoutes.js'
 // import chatRoutes from './routes/chatRoutes.js'
 import jwt from 'jsonwebtoken'
 
@@ -34,7 +34,7 @@ mongoose.connect("mongodb+srv://michaelismur:admin@horsehelper.g1dwcs9.mongodb.n
 
 
 app.use('/auth', authRoutes)
-// app.use('/groups', groupRoutes)
+app.use('/stories', storyRoutes)
 // app.use('/chat', chatRoutes)
 
 
