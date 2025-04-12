@@ -11,6 +11,7 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
 } from 'react-map-gl/maplibre'
 
 import { Button, Form, Image, Carousel } from 'react-bootstrap';
+import { ArrowLeft, List } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
 
@@ -82,24 +83,38 @@ const MapPage = () => {
     const [zoomed, setZoomed] = useState(false)
 
     
-    const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(false)
+    const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
+    async function fetchData(){
+        let stories = await getStoriesApi()
+        setStories(stories)
+        // setSearchParams({'authorId': 'abc'})
+        
+    }
 
     useEffect(() => {
-        async function fetchData(){
-            let stories = await getStoriesApi()
-            setStories(stories)
-            setSearchParams({'authorId': 'abc'})
-            
-        }
+        
         fetchData()
     }, [])
 
 
-    function createStory () {
-        createStoryApi(newStoryName, newStoryText, newStoryImages,
+    async function createStory () {
+        await createStoryApi(newStoryName, newStoryText, ["https://www.hdwallpapers.in/thumbs/2021/lake_with_reflection_of_mountain_and_clouds_4k_hd_nature-t2.jpg"],
             newMarker.lng, newMarker.lat
         )
+        await fetchData()
+    }
+
+    const formatDate = (dateStr) => {
+        let timestamp = Date.parse(dateStr)
+        let date = new Date(timestamp)
+        let year = date.getFullYear()
+        let month = date.getMonth() + 1 < 10 ? '0'+(date.getMonth() + 1) : date.getMonth() + 1
+        let day = date.getDate() < 10 ? '0'+date.getDate() : date.getDate()
+        let hour = date.getHours() < 10 ? '0'+date.getHours() : date.getHours()
+        let minute = date.getMinutes() < 10 ? '0'+date.getMinutes() : date.getMinutes()
+
+        return day + '.' + month + '.' + year + ' в ' + hour + ':' + minute
     }
 
 
@@ -126,8 +141,10 @@ const MapPage = () => {
 
                 console.log("NEW")
                 
-                setLastCenter(mymap.getCenter())
-                setLastZoom(mymap.getZoom())
+                if (!newMarker) {
+                    setLastCenter(mymap.getCenter())
+                    setLastZoom(mymap.getZoom())
+                }
 
                 setNewMarker({
                     lat: c.lngLat.lat,
@@ -199,6 +216,7 @@ const MapPage = () => {
 
                                 setShowStory(true)
                                 setStoryShowed(story)
+                                console.log(story)
                             }}
                         >
                             <Pin selected={selectedMarkerIndex == key} />
@@ -239,10 +257,16 @@ const MapPage = () => {
                 </Popup> */}
             </Map>
         </div>
+
+
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
             <div className="topHolder">
                 {!newMarker && 
                 <button className='mapButton' onClick={()=>{
+                    setShowStory(false)
+                    setStoryShowed(null)
+                    setSelectedMarkerIndex(-1)
+
                     if (placeNewMarker) {
                         setPlaceNewMarker(false)
                     } else {
@@ -251,11 +275,12 @@ const MapPage = () => {
                 }}>
                     {placeNewMarker ? 'Отменить' : 'Создать историю'}
                 </button>}
-                <div className="profilePic">
+                <List />
+                {/* <div className="profilePic">
                     <Image src="/profile-icon.png" roundedCircle fluid 
                     style={{cursor: "pointer"}}/>
                     {author.name}
-                </div>
+                </div> */}
             </div>
             {/* <button className='mapButton'>Создать историю</button> */}
             {newMarker &&
@@ -302,7 +327,18 @@ const MapPage = () => {
             }
             {(showStory && storyShowed) &&
             <div className="storyBlock">
-                <button className='backButton' onClick={() => {
+                <ArrowLeft className='backButton' onClick={() => {
+                    if (!zoomed) {
+                        console.log(lastCenter)
+                        mymap.flyTo({
+                            center: lastCenter,
+                            zoom: lastZoom
+                        })
+                    }
+                    setShowStory(false)
+                    setSelectedMarkerIndex(-1)
+                }} />
+                {/* <button onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
                         mymap.flyTo({
@@ -314,7 +350,7 @@ const MapPage = () => {
                     setSelectedMarkerIndex(-1)
                 }}>
                     BACK
-                </button>
+                </button> */}
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>
@@ -324,6 +360,7 @@ const MapPage = () => {
                         Подписаться
                     </button>
                 </div>
+                {new Array(...storyShowed?.storyImages).length > 0 &&
                 <Carousel className='storyImages' pause="hover">
                     {storyShowed.storyImages.map((image, i) => {
                         return(
@@ -333,11 +370,12 @@ const MapPage = () => {
                         )
                     })}
                 </Carousel>
+                }
                 <div className="storyText">
                     {storyShowed?.storyText}
                 </div>
                 <div className="storyDate">
-                    История написана 
+                    История опубликована {formatDate(storyShowed?.createdAt)}
                 </div>
                 
             </div>
