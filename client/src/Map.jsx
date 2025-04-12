@@ -14,7 +14,7 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
 } from 'react-map-gl/maplibre'
 
 import { Button, Form, Image, Carousel, Offcanvas,  ListGroup } from 'react-bootstrap';
-import { ArrowLeft, List } from 'react-bootstrap-icons'
+import { ArrowLeft, List, BoxArrowRight } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
 
@@ -55,6 +55,8 @@ const MapPage = () => {
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
+    const [fetch, setFetch] = useState(false)
+
     async function fetchData(){
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
@@ -64,10 +66,18 @@ const MapPage = () => {
         return storiesFetched
     }
 
+    async function fetchAuthorStories (authorId) {
+        let storiesFetched = await getStoriesByAuthorIdApi(authorId)
+        let arr = new Array(...storiesFetched)
+        arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? -1 : 0))
+        console.log("arr",arr)
+        setStories(arr)
+    }
+
     useEffect(() => {
-        
+        console.log('useeffect')
         fetchData()
-    }, [])
+    }, [fetch])
 
 
     async function createStory () {
@@ -87,6 +97,12 @@ const MapPage = () => {
         setSelectedMarkerIndex(newStories.length - 1)
         setStoryShowed(newStories[newStories.length - 1])
         
+    }
+
+    async function getStoriesByAuthor (authorId) {
+        await fetchAuthorStories(authorId)
+        setSearchParams({"authorId": authorId})
+        setFetch(!fetch)
     }
 
     const formatDate = (dateStr) => {
@@ -343,7 +359,7 @@ const MapPage = () => {
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>
-                <div className="storyAuthor">
+                <div className="storyAuthor" onClick={() => getStoriesByAuthor(storyShowed?.authorId)}>
                     {storyShowed?.authorName}
                     <button className='followButton'>
                         Подписаться
@@ -369,6 +385,34 @@ const MapPage = () => {
                 
             </div>
             }
+
+
+{false &&
+            <div className="authorPage">
+                <div className="authorPageName">
+                    <div className="profilePageIcon">{author.name[0]}</div>
+                    {author.name}
+                </div>
+                {stories.length > 0 &&
+                <div className="authorStoriesBlock">
+                    {stories.map((story, i) => {
+                        return(
+                            <div className="authorStory" key={i}>
+                                <div className="authorStoryName">{story?.storyName}</div>
+                                <div className="authorStoryBody">
+                                    {new Array(...story?.storyImages).length > 0 &&
+                                    <div className="authorStoryImage">
+                                        <img src={story.storyImages[0]} className='authorStoryImg' />
+                                        <div className="authorStoryImgOverlay">+{new Array(...story?.storyImages).length}</div>
+                                    </div>
+                                    }
+                                    <div className="authorStoryText">{story?.storyText}</div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>}
+            </div>}
         </div>
 
         <Offcanvas show={showMenu} onHide={() => setShowMenu(false)} placement='end'>
@@ -378,14 +422,17 @@ const MapPage = () => {
             <Offcanvas.Body>
                 <div className="profileMenu">
                     <div className="profileMenuIcon">{author.name[0]}</div>
-                    {author.name}
+                    <div className="profileMenuName">{author.name}</div>
                 </div>
                 <div className="menuLinks">
                     <div className="menuLink">Главная страница</div>
                     <div className="menuLink">Мои истории</div>
                     <div className="menuLink">Мои подписки</div>
                 </div>
-                <div className="logoutButton">Выйти</div>
+                <div className="logoutButton" onClick={logout}>
+                    Выйти
+                    <BoxArrowRight size={18} color='#d00' />
+                </div>
             </Offcanvas.Body>
         </Offcanvas>
         </div>

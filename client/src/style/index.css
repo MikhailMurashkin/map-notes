@@ -78,7 +78,6 @@ button:hover {
 }
 
 .imageItem {
-  width: fit-content;
   object-fit: cover;
   height: 300px;
   width: 460px;
@@ -118,6 +117,7 @@ button:hover {
   flex-direction: row;
   column-gap: 10px;
   align-items: center;
+  cursor: pointer;
 }
 
 .followButton {
@@ -168,11 +168,131 @@ button:hover {
   display: flex;
   flex-direction: row;
   column-gap: 10px;
+  text-align: center;
+  align-items: center;
   cursor: pointer;
-  background-color: #C3ECB2;
   width: fit-content;
+  /* justify-content: center; */
 }
 
 .profileMenuIcon {
-  
+  cursor: pointer;
+  background-color: #C3ECB2;
+  color: #3a4635;
+  font-size: 20px;
+  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  border-radius: 45px;
+  text-align: center;
+  line-height: 40px;
+}
+
+.profileMenuName {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 20px;
+}
+
+.menuLinks {
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border-top: 2px solid #3a4635;
+  border-bottom: 2px solid #3a4635;
+}
+
+.menuLink {
+  padding: 6px 12px;
+  cursor: pointer;
+  line-height: 30px;
+  width: fit-content;
+}
+
+.menuLink:hover {
+  font-size: 18px;
+  transition-duration: 0.3s;
+}
+
+.logoutButton {
+  color: #d00;
+  display: flex;
+  flex-direction: row;
+  column-gap: 6px;
+  align-items: center;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  background-color: white;
+}
+
+.authorStoryImage {
+  position: relative;
+  height: 140px;
+  width: 140px;
+}
+
+.authorStoryImg {
+  object-fit: cover;
+  height: 140px;
+  width: 140px;
+  border-radius: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.authorStoryImgOverlay {
+  height: 140px;
+  width: 140px;
+  border-radius: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(117, 117, 117, 0.5);
+  font-size: 50px;
+  font-weight: bold;
+  color: rgba(50, 50, 50, 0.75);
+  text-align: center;
+  line-height: 140px;
+}
+
+.authorStoriesBlock {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+}
+
+.authorStory {
+  background-color: aqua;
+  padding: 6px 20px;
+}
+
+.authorStoryBody {
+  display: flex;
+  flex-direction: row;
+  column-gap: 20px;
+}
+
+.authorStoryName {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.authorStoryText {
+  background-color: yellow;
+  width: 280px;
+  height: fit-content;
+  max-height: 140px;
+  text-overflow: ellipsis;
+  /* white-space: nowrap; */
+  overflow: hidden;
+  word-wrap: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
 }
