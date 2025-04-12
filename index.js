@@ -18,6 +18,20 @@ dotenv.config()
 const app = express()
 const server = createServer(app)
 
+app.use(express.json())
+
+app.use(cors({
+  origin: 'http://localhost:3001',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}))
+
+mongoose.connect("mongodb+srv://michaelismur:admin@horsehelper.g1dwcs9.mongodb.net/?retryWrites=true&w=majority&appName=horsehelper" || process.env.MONGO_URI, {
+    family: 4
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.log(err))
+
 
 app.use('/auth', authRoutes)
 // app.use('/groups', groupRoutes)
