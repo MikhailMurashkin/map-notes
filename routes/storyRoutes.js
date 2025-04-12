@@ -32,7 +32,7 @@ storyRoutes.post('/createStory', protect, async (req, res) => {
     }
 })
 
-storyRoutes.post('/getStories', protect, async (req, res) => {
+storyRoutes.get('/getStories', protect, async (req, res) => {
     try {
         let stories = await Story.find({ })
         let authors = await Author.find({ })
@@ -40,9 +40,12 @@ storyRoutes.post('/getStories', protect, async (req, res) => {
         let storiesExtended = []
         stories.forEach(story => {
             story = story._doc
-            let authorI = authors.findIndex(a => a.id == story.authorId)
 
+            let authorI = authors.findIndex(a => a.id == story.authorId)
             story.authorName = authors[authorI].name
+
+            story.authoredByMe = story.authorId == req.author
+
             storiesExtended.push(story)
         })
 
@@ -56,24 +59,51 @@ storyRoutes.post('/getStories', protect, async (req, res) => {
 storyRoutes.get('/getMyStories', protect, async (req, res) => {
     try {
         let myStories = await Story.find({ authorId: req.author})
-        // let authors = await Author.find({ })
+        let me = await Author.findOneById( req.author )
 
-        // let myStoriesExtended = []
-        // myStories.forEach(story => {
-        //     story = story._doc
-        //     let authorI = authors.findIndex(a => a.id == story.authorId)
+        let myStoriesExtended = []
+        myStories.forEach(myStory => {
+            myStory = myStory._doc
 
-        //     story.authorName = authors[authorI].name
-        //     myStoriesExtended.push(story)
-        // })
+            myStory.authorName = me.name
 
-        res.json(myStories);
+            myStory.authoredByMe = true
+
+            myStoriesExtended.push(myStory)
+        })
+
+        res.json(myStoriesExtended);
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Server error' });
     }
 })
 
+
+storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
+    try {
+        const { authorId } = req.body
+        console.log(authorId)
+        let storiesByAuthor = await Story.find({ authorId: req.body.authorId})
+        let author = await Author.findById(authorId)
+
+        let storiesByAuthorExtended = []
+        storiesByAuthor.forEach(storyByAuthor => {
+            storyByAuthor = storyByAuthor._doc
+
+            storyByAuthor.authorName = author.name
+
+            storyByAuthor.authoredByMe = author.authorId == req.author
+
+            storiesByAuthorExtended.push(storyByAuthor)
+        })
+
+        res.json(storiesByAuthorExtended);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error' });
+    }
+})
 
 
 
