@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 
 // import { createGroup, getGroupsByUserId, joinGroupByCode } from './modules/Api'
@@ -9,7 +9,7 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
     Popup, Marker, useMap
 } from 'react-map-gl/maplibre'
 
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Image, Carousel } from 'react-bootstrap';
 
 import Pin from './assets/pin'
 
@@ -20,8 +20,8 @@ let stories = [
         authorName: "Name",
         storyId: "storyid1",
         storyName: "Story Name",
-        storyText: "Story text",
-        storyImages: ["link 1", "link 2"],
+        storyText: "Story text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque tincidunt volutpat nisl ut suscipit. Quisque porta volutpat pretium. Integer a felis vel felis pretium auctor et vel nisi. Donec vulputate elementum varius. Maecenas et purus a quam vehicula luctus. Quisque eget rutrum dui, a consequat sem. Phasellus sodales nisi diam, in fermentum neque laoreet quis. Sed porta ultricies porttitor. Vestibulum id vehicula neque. Curabitur maximus mi odio, sed semper orci tempor vitae. Nunc eget porttitor nulla, non ultricies neque. Vestibulum bibendum nisl non tristique commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        storyImages: ["https://s3.stroi-news.ru/img/krasivie-kartinki-peizazh-1.jpg", "https://avianity.ru/wp-content/uploads/moskva.jpg"],
         date: new Date(),
         longitude: 37.64909959453797,
         latitude: 55.75413746010946
@@ -54,6 +54,8 @@ let stories = [
 const MapPage = () => {
     const {mymap} = useMap()
 
+    const [searchParams, setSearchParams] = useSearchParams()
+
     const [popupInfo, setPopupInfo] = useState(null)
     const [showPanel, setShowPanel] = useState(false)
     const [placeNewMarker, setPlaceNewMarker] = useState(false)
@@ -64,11 +66,18 @@ const MapPage = () => {
     // const [zoom, setZoom] = useState(9)
 
     const [newMarker, setNewMarker] = useState(false)
+    const [newStoryName, setNewStoryName] = useState("")
+    const [newStoryText, setNewStoryText] = useState("")
+    const [newStoryImages, setNewStoryImages] = useState("")
+
+    const [showStory, setShowStory] = useState(false)
+    const [storyShowed, setStoryShowed] = useState(null)
 
 
     useEffect(() => {
         async function fetchData(){
-
+            console.log(searchParams)
+            setSearchParams({'authorId': 'abc'})
         }
         fetchData()
     }, [])
@@ -79,6 +88,20 @@ const MapPage = () => {
             longitude: 37.61
         }
     ]
+
+    function createStory () {
+        let story = {
+            authorId: "test",
+            authorName: "Varya",
+            storyName: newStoryName,
+            storyText: newStoryText,
+            storyImages: newStoryImages,
+            date: new Date(),
+            longitude: newMarker?.lng,
+            latitude: newMarker?.lat
+        }
+        console.log(story)
+    }
 
 
     return (
@@ -145,6 +168,9 @@ const MapPage = () => {
                             anchor="bottom"
                             onClick={e => {
                                 e.originalEvent.stopPropagation()
+                                console.log(story)
+                                setShowStory(true)
+                                setStoryShowed(story)
                                 
                                 mymap.flyTo({
                                     center: [story.longitude, story.latitude],
@@ -192,43 +218,93 @@ const MapPage = () => {
                 </Popup> */}
             </Map>
         </div>
-        <div style={{backgroundColor: 'pink', width: '500px'}}>
-            {!newMarker && <Button onClick={()=>{
-                if (placeNewMarker) {
-                    setPlaceNewMarker(false)
-                } else {
-                    setPlaceNewMarker(true)
-                }
-            }}>
-                {placeNewMarker ? 'Отменить' : 'Создать историю'}
-            </Button>}
-            {newMarker &&
-                <Form>
-                    <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-                        <Form.Label>Название вашей истории</Form.Label>
-                        <Form.Control placeholder="name@example.com" />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-                        <Form.Label>Текст вашей истории</Form.Label>
-                        <Form.Control as="textarea" rows={3} />
-                    </Form.Group>
-                    <Button>
-                        Создать
-                    </Button>
-                    <Button onClick={()=>{
-                        setNewMarker(false)
+        <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
+            <div className="topHolder">
+                {!newMarker && 
+                <button className='mapButton' onClick={()=>{
+                    if (placeNewMarker) {
                         setPlaceNewMarker(false)
+                    } else {
+                        setPlaceNewMarker(true)
+                    }
+                }}>
+                    {placeNewMarker ? 'Отменить' : 'Создать историю'}
+                </button>}
+                <div className="profilePic">
+                    <Image src="/profile-icon.png" roundedCircle fluid 
+                    style={{cursor: "pointer"}}/>
+                </div>
+            </div>
+            {/* <button className='mapButton'>Создать историю</button> */}
+            {newMarker &&
+                <div className='newMarkerBlock'>
+                    <div className='inputBlock'>
+                        <Form.Label>Название вашей истории</Form.Label>
+                        <Form.Control value={newStoryName} 
+                        onChange={e => setNewStoryName(e.target.value)} />
+                    </div>
+                    <div className='inputBlock'>
+                        <Form.Label>Текст вашей истории</Form.Label>
+                        <Form.Control as="textarea" rows={3} value={newStoryText} 
+                        onChange={e => setNewStoryText(e.target.value)} 
+                        className='descriptionTextara' />
+                    </div>
+                    <div className='inputBlock'>
+                        <Form.Label>Фотографии</Form.Label>
+                        <Form.Control  />
+                    </div>
+                    <div className="newStoryButtons">
+                        <button onClick={createStory}>
+                            Создать историю
+                        </button>
+                        <Button variant='secondary' onClick={()=>{
+                            setNewMarker(false)
+                            setPlaceNewMarker(false)
+                            setNewStoryName('')
+                            setNewStoryText('')
+                            setNewStoryImages([])
 
-                        mymap.flyTo({
-                            center: [37.61, 55.75],
-                            zoom: 9,
-                            speed: 1,
-                            curve: 1
-                        })
-                    }}>
-                        Отменить
-                    </Button>
-                </Form>
+                            mymap.flyTo({
+                                center: [37.61, 55.75],
+                                zoom: 9,
+                                speed: 1,
+                                curve: 1
+                            })
+                        }}>
+                            Отменить
+                        </Button>
+                    </div>
+                    
+                </div>
+            }
+            {(showStory && storyShowed) &&
+            <div className="storyBlock">
+                <div className="storyName">
+                    {storyShowed?.storyName}
+                </div>
+                <div className="storyAuthor">
+                    {storyShowed?.authorName}
+                    <button className='followButton'>
+                        Подписаться
+                    </button>
+                </div>
+                <Carousel className='storyImages' pause="hover">
+                    {storyShowed.storyImages.map((image, i) => {
+                        return(
+                            <Carousel.Item key={i}>
+                                <img className='imageItem' src={image} />
+                            </Carousel.Item>
+                        )
+                    })}
+                </Carousel>
+                <div className="storyText">
+                    {storyShowed?.storyText}
+                </div>
+                <div className="storyDate">
+                    История написана 
+                </div>
+                
+            </div>
             }
         </div>
         </div>
