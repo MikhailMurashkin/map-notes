@@ -53,6 +53,33 @@ storyRoutes.post('/getStories', protect, async (req, res) => {
     }
 })
 
+storyRoutes.get('/getMyStories', protect, async (req, res) => {
+    try {
+        let myStories = await Story.find({ authorId: req.author})
+        // let authors = await Author.find({ })
+
+        // let myStoriesExtended = []
+        // myStories.forEach(story => {
+        //     story = story._doc
+        //     let authorI = authors.findIndex(a => a.id == story.authorId)
+
+        //     story.authorName = authors[authorI].name
+        //     myStoriesExtended.push(story)
+        // })
+
+        res.json(myStories);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error' });
+    }
+})
+
+
+
+
+
+
+
 storyRoutes.post('/getGroupInfoById', protect, async (req, res) => {
     try {
         await Group.findOne({id: req.body.groupId, participantsId: {$in: req.user}})

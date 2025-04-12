@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
-import { createStoryApi, getStoriesApi } from './modules/Api'
+import { createStoryApi, getStoriesApi, getMyStoriesApi } from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationControl,
