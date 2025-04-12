@@ -23,13 +23,10 @@ export const createStoryApi = async (storyName, storyText, storyImages, longitud
 
 export const getStoriesApi = async () => {
   const response = await fetch(`${API_URL}/stories/getStories`, {
-    method: 'POST',
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify({
-      
-    })
+    }
   })
 
   const data = await response.json()
@@ -53,6 +50,27 @@ export const getMyStoriesApi = async () => {
 
   if (!response.ok) {
     throw new Error(data.message || 'Не удалось получить список моих историй')
+  }
+
+  return data
+}
+
+export const getStoriesByAuthorIdApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/getStoriesByAuthorId`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      authorId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось получить список историй автора')
   }
 
   return data

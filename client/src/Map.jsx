@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
-import { createStoryApi, getStoriesApi, getMyStoriesApi } from './modules/Api'
+import {
+    createStoryApi, getStoriesApi, getMyStoriesApi,
+    getStoriesByAuthorIdApi
+} from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationControl,
@@ -16,41 +19,6 @@ import { ArrowLeft, List } from 'react-bootstrap-icons'
 import Pin from './assets/pin'
 
 
-// let stories = [
-//     {
-//         authorId: "abc",
-//         authorName: "Name",
-//         storyId: "storyid1",
-//         storyName: "Story Name",
-//         storyText: "Story text Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque tincidunt volutpat nisl ut suscipit. Quisque porta volutpat pretium. Integer a felis vel felis pretium auctor et vel nisi. Donec vulputate elementum varius. Maecenas et purus a quam vehicula luctus. Quisque eget rutrum dui, a consequat sem. Phasellus sodales nisi diam, in fermentum neque laoreet quis. Sed porta ultricies porttitor. Vestibulum id vehicula neque. Curabitur maximus mi odio, sed semper orci tempor vitae. Nunc eget porttitor nulla, non ultricies neque. Vestibulum bibendum nisl non tristique commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-//         storyImages: ["https://s3.stroi-news.ru/img/krasivie-kartinki-peizazh-1.jpg", "https://avianity.ru/wp-content/uploads/moskva.jpg"],
-//         date: new Date(),
-//         longitude: 37.64909959453797,
-//         latitude: 55.75413746010946
-//     },
-//     {
-//         authorId: "abcde",
-//         authorName: "Misha",
-//         storyId: "storyid2",
-//         storyName: "Story Misha Name",
-//         storyText: "Story text Misha",
-//         storyImages: ["link 1", "link 2"],
-//         date: new Date(),
-//         longitude: 37.91481238104444,
-//         latitude: 55.962609794694515
-//     },
-//     {
-//         authorId: "qwerty",
-//         authorName: "Varya",
-//         storyId: "storyid3",
-//         storyName: "Story Varya Name",
-//         storyText: "Story text Varya",
-//         storyImages: ["link 1", "link 2"],
-//         date: new Date(),
-//         longitude: 37.34458861624242,
-//         latitude: 55.81647271890208
-//     }
-// ]
 
 
 const MapPage = () => {
@@ -89,7 +57,6 @@ const MapPage = () => {
         let stories = await getStoriesApi()
         setStories(stories)
         // setSearchParams({'authorId': 'abc'})
-        
     }
 
     useEffect(() => {
