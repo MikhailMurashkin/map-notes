@@ -156,3 +156,23 @@ button:hover {
   left: 20px;
   cursor: pointer;
 }
+
+.menuButton {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  cursor: pointer;
+}
+
+.profileMenu {
+  display: flex;
+  flex-direction: row;
+  column-gap: 10px;
+  cursor: pointer;
+  background-color: #C3ECB2;
+  width: fit-content;
+}
+
+.profileMenuIcon {
+  
+}

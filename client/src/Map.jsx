@@ -10,7 +10,7 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
     Popup, Marker, useMap
 } from 'react-map-gl/maplibre'
 
-import { Button, Form, Image, Carousel } from 'react-bootstrap';
+import { Button, Form, Image, Carousel, Offcanvas,  ListGroup } from 'react-bootstrap';
 import { ArrowLeft, List } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
@@ -82,14 +82,18 @@ const MapPage = () => {
     const [lastZoom, setLastZoom] = useState(false)
     const [zoomed, setZoomed] = useState(false)
 
+    const [showMenu, setShowMenu] = useState(false)
+
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
     async function fetchData(){
-        let stories = await getStoriesApi()
-        setStories(stories)
+        let storiesFetched = await getStoriesApi()
+        setStories(storiesFetched)
+        console.log("fetched", stories)
         // setSearchParams({'authorId': 'abc'})
         
+        return storiesFetched
     }
 
     useEffect(() => {
@@ -102,7 +106,19 @@ const MapPage = () => {
         await createStoryApi(newStoryName, newStoryText, ["https://www.hdwallpapers.in/thumbs/2021/lake_with_reflection_of_mountain_and_clouds_4k_hd_nature-t2.jpg"],
             newMarker.lng, newMarker.lat
         )
-        await fetchData()
+        let newStories = await fetchData()
+
+        setNewMarker(false)
+        setPlaceNewMarker(false)
+        setNewStoryName('')
+        setNewStoryText('')
+        setNewStoryImages([])
+
+        
+        setShowStory(true)
+        setSelectedMarkerIndex(newStories.length - 1)
+        setStoryShowed(newStories[newStories.length - 1])
+        
     }
 
     const formatDate = (dateStr) => {
@@ -260,6 +276,7 @@ const MapPage = () => {
 
 
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
+
             <div className="topHolder">
                 {!newMarker && 
                 <button className='mapButton' onClick={()=>{
@@ -275,7 +292,8 @@ const MapPage = () => {
                 }}>
                     {placeNewMarker ? 'Отменить' : 'Создать историю'}
                 </button>}
-                <List />
+                <List size={24} className='menuButton' onClick={() => setShowMenu(true)} />
+                
                 {/* <div className="profilePic">
                     <Image src="/profile-icon.png" roundedCircle fluid 
                     style={{cursor: "pointer"}}/>
@@ -283,6 +301,9 @@ const MapPage = () => {
                 </div> */}
             </div>
             {/* <button className='mapButton'>Создать историю</button> */}
+
+
+
             {newMarker &&
                 <div className='newMarkerBlock'>
                     <div className='inputBlock'>
@@ -381,6 +402,24 @@ const MapPage = () => {
             </div>
             }
         </div>
+
+        <Offcanvas show={showMenu} onHide={() => setShowMenu(false)} placement='end'>
+            <Offcanvas.Header closeButton>
+                <Offcanvas.Title>Меню</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+                <div className="profileMenu">
+                    <div className="profileMenuIcon">{author.name[0]}</div>
+                    {author.name}
+                </div>
+                <div className="menuLinks">
+                    <div className="menuLink">Главная страница</div>
+                    <div className="menuLink">Мои истории</div>
+                    <div className="menuLink">Мои подписки</div>
+                </div>
+                <div className="logoutButton">Выйти</div>
+            </Offcanvas.Body>
+        </Offcanvas>
         </div>
     )
 }
