@@ -40,9 +40,12 @@ storyRoutes.post('/getStories', protect, async (req, res) => {
         let storiesExtended = []
         stories.forEach(story => {
             story = story._doc
-            let authorI = authors.findIndex(a => a.id == story.authorId)
 
+            let authorI = authors.findIndex(a => a.id == story.authorId)
             story.authorName = authors[authorI].name
+
+            story.authoredByMe = story.authorId == req.author
+
             storiesExtended.push(story)
         })
 
@@ -56,6 +59,30 @@ storyRoutes.post('/getStories', protect, async (req, res) => {
 storyRoutes.get('/getMyStories', protect, async (req, res) => {
     try {
         let myStories = await Story.find({ authorId: req.author})
+        let me = await Author.findOneById( req.author )
+
+        let myStoriesExtended = []
+        myStories.forEach(myStory => {
+            myStory = myStory._doc
+
+            myStory.authorName = me.name
+
+            myStory.authoredByMe = true
+
+            myStoriesExtended.push(myStory)
+        })
+
+        res.json(myStoriesExtended);
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error' });
+    }
+})
+
+
+storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
+    try {
+        let myStories = await Story.find({ authorId: req.body.authorId })
         // let authors = await Author.find({ })
 
         // let myStoriesExtended = []
@@ -73,7 +100,6 @@ storyRoutes.get('/getMyStories', protect, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 })
-
 
 
 
