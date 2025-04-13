@@ -28,6 +28,8 @@ const MapPage = () => {
 
     const [searchParams, setSearchParams] = useSearchParams()
 
+    const navigate = useNavigate()
+
     const [stories, setStories] = useState([])
 
     const [showPanel, setShowPanel] = useState(false)
@@ -51,6 +53,7 @@ const MapPage = () => {
     const [zoomed, setZoomed] = useState(false)
 
     const [showMenu, setShowMenu] = useState(false)
+    const [showAuthor, setShowAuthor] = useState(false)
 
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
@@ -69,15 +72,71 @@ const MapPage = () => {
     async function fetchAuthorStories (authorId) {
         let storiesFetched = await getStoriesByAuthorIdApi(authorId)
         let arr = new Array(...storiesFetched)
-        arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? -1 : 0))
+        arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0))
         console.log("arr",arr)
         setStories(arr)
     }
 
+    function addSearchParam (tag, value) {
+        setSearchParams((searchParams) => {
+            searchParams.append(tag, value)
+            return searchParams
+        })
+    }
+
+    function deleteSearchParamsTagAll (tag) {
+        setSearchParams((searchParams) => {
+            searchParams.delete(tag)
+            return searchParams
+        })
+    }
+
+    function deleteSearchParamsTagValue (tag, value) {
+        setSearchParams((searchParams) => {
+            searchParams.delete(tag, value)
+            return searchParams
+        })
+    }
+
+    function goBack () {
+        navigate(-1)
+    }
+
+    async function fetchAndSetStory (storyId) {
+        let fetched = await fetchData()
+        setShowAuthor(false)
+        let arr = new Array(...fetched)
+        let index = arr.findIndex(a => a.storyId == storyId)
+        if (index > -1) {
+
+            console.log("index", index)
+            let story = arr[index]
+            setSelectedMarkerIndex(index)
+            setShowStory(true)
+            setStoryShowed(story)
+        }
+    }
+
     useEffect(() => {
         console.log('useeffect')
-        fetchData()
-    }, [fetch])
+        console.log(author)
+        if (searchParams.has("authorId")) {
+            let id = searchParams.get("authorId")
+            if (id != author._id) {
+                fetchAuthorStories(id)
+            } else {
+                console.log("ME")
+            }
+        }
+        else {
+            if (searchParams.has("storyId")) {
+                let id = searchParams.get("storyId")
+                fetchAndSetStory(id)
+            } else {
+                fetchData()
+            }
+        }
+    }, [])
 
 
     async function createStory () {
@@ -102,7 +161,12 @@ const MapPage = () => {
     async function getStoriesByAuthor (authorId) {
         await fetchAuthorStories(authorId)
         setSearchParams({"authorId": authorId})
-        setFetch(!fetch)
+        setShowStory(false)
+        setSelectedMarkerIndex(-1)
+        setStoryShowed(null)
+        setShowAuthor(true)
+        // setFetch(!fetch)
+        console.log("search", searchParams)
     }
 
     const formatDate = (dateStr) => {
@@ -186,6 +250,7 @@ const MapPage = () => {
                 {/* <FullscreenControl /> */}
                 <NavigationControl />
 
+                {/* ВСЕ МАРКЕРЫ И ONCLICK */}
                 {stories.map((story, key) => {
                     return (
                         <Marker
@@ -214,8 +279,11 @@ const MapPage = () => {
                                 })
                                 setZoomed(false)
 
+                                setShowAuthor(false)
+
                                 setShowStory(true)
                                 setStoryShowed(story)
+                                setSearchParams({"storyId": story.storyId})
                                 console.log(story)
                             }}
                         >
@@ -224,6 +292,7 @@ const MapPage = () => {
                     )
                 })}
 
+                {/* НОВЫЙ МАРКЕР */}
                 {newMarker && <Marker
                     key={`new-marker`}
                     latitude={newMarker.lat}
@@ -262,6 +331,7 @@ const MapPage = () => {
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
 
             <div className="topHolder">
+                {/* <Button onClick={() => navigate(-1)}>back</Button> */}
                 {!newMarker && 
                 <button className='mapButton' onClick={()=>{
                     setShowStory(false)
@@ -287,7 +357,7 @@ const MapPage = () => {
             {/* <button className='mapButton'>Создать историю</button> */}
 
 
-
+            {/* НОВАЯ ИСТОРИЯ */}
             {newMarker &&
                 <div className='newMarkerBlock'>
                     <div className='inputBlock'>
@@ -330,9 +400,11 @@ const MapPage = () => {
                     
                 </div>
             }
+
+            {/* ИСТОРИЯ */}
             {(showStory && storyShowed) &&
             <div className="storyBlock">
-                <ArrowLeft className='backButton' onClick={() => {
+                <ArrowLeft size={18} className='backButton' onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
                         mymap.flyTo({
@@ -387,11 +459,22 @@ const MapPage = () => {
             }
 
 
-{false &&
+            {/* СТРАНИЦА АВТОРА */}
+            {showAuthor &&
             <div className="authorPage">
                 <div className="authorPageName">
+                <ArrowLeft size={18} className='backButton' onClick={() => {
+                    // setShowStory(false)
+                    // setSelectedMarkerIndex(-1)
+                    setShowAuthor(false)
+                    goBack()
+                    // deleteSearchParamsTagValue("authorId", auth)
+                }} />
                     <div className="profilePageIcon">{author.name[0]}</div>
                     {author.name}
+                    <button className='followButton'>
+                        Подписаться
+                    </button>
                 </div>
                 {stories.length > 0 &&
                 <div className="authorStoriesBlock">
@@ -403,7 +486,9 @@ const MapPage = () => {
                                     {new Array(...story?.storyImages).length > 0 &&
                                     <div className="authorStoryImage">
                                         <img src={story.storyImages[0]} className='authorStoryImg' />
-                                        <div className="authorStoryImgOverlay">+{new Array(...story?.storyImages).length}</div>
+                                        {new Array(...story?.storyImages).length > 1 &&
+                                        <div className="authorStoryImgOverlay">+{new Array(...story?.storyImages).length - 1}</div>
+                                        }
                                     </div>
                                     }
                                     <div className="authorStoryText">{story?.storyText}</div>

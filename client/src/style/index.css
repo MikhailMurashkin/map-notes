@@ -261,30 +261,45 @@ button:hover {
   line-height: 140px;
 }
 
+.authorPage {
+  overflow-y: scroll;
+  position: relative;
+}
+
 .authorStoriesBlock {
   display: flex;
   flex-direction: column;
-  row-gap: 10px;
+  row-gap: 8px;
+  /* background-color: #d00; */
+  padding-bottom: 20px;
 }
 
 .authorStory {
-  background-color: aqua;
   padding: 6px 20px;
+  box-shadow: 0px 10px 15px -5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
+
+.authorStory:hover {
+  box-shadow: 0px 15px 10px -5px rgba(0, 0, 0, 0.5);
+  transition-duration: 0.2s;
+}
+
 
 .authorStoryBody {
   display: flex;
   flex-direction: row;
   column-gap: 20px;
+  padding-bottom: 4px;
 }
 
 .authorStoryName {
   font-size: 22px;
   font-weight: 500;
+  padding-top: 10px;
 }
 
 .authorStoryText {
-  background-color: yellow;
   width: 280px;
   height: fit-content;
   max-height: 140px;
@@ -295,4 +310,31 @@ button:hover {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
+}
+
+.authorPageName {
+  display: flex;
+  flex-direction: row;
+  column-gap: 8px;
+  /* background-color: #d00; */
+  padding-top: 20px;
+  padding-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  font-weight: 600;
+  position: relative;
+}
+
+.profilePageIcon {
+  background-color: #C3ECB2;
+  color: #3a4635;
+  font-size: 22px;
+  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  border-radius: 45px;
+  text-align: center;
+  line-height: 40px;
+  cursor: default;
 }
