@@ -118,6 +118,27 @@ export const dislikeStoryApi = async (authorId) => {
   return data
 }
 
+export const subscribeApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/subscribeAuthor`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      authorId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось подписаться на автора')
+  }
+
+  return data
+}
+
 
 
 
