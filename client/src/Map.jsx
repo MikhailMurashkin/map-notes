@@ -48,8 +48,8 @@ const MapPage = () => {
     const [showStory, setShowStory] = useState(false)
     const [storyShowed, setStoryShowed] = useState(null)
 
-    const [lastCenter, setLastCenter] = useState(false)
-    const [lastZoom, setLastZoom] = useState(false)
+    const [lastCenter, setLastCenter] = useState([37.61, 55.75])
+    const [lastZoom, setLastZoom] = useState(9)
     const [zoomed, setZoomed] = useState(false)
 
     const [showMenu, setShowMenu] = useState(false)
@@ -58,7 +58,7 @@ const MapPage = () => {
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
-    const [fetch, setFetch] = useState(false)
+    const [fetchedInitialStory, setFetchedInitialStory] = useState(false)
 
     async function fetchData(){
         let storiesFetched = await getStoriesApi()
@@ -75,6 +75,7 @@ const MapPage = () => {
         arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0))
         console.log("arr",arr)
         setStories(arr)
+        return storiesFetched
     }
 
     function addSearchParam (tag, value) {
@@ -85,10 +86,11 @@ const MapPage = () => {
     }
 
     function deleteSearchParamsTagAll (tag) {
-        setSearchParams((searchParams) => {
-            searchParams.delete(tag)
-            return searchParams
-        })
+        // setSearchParams((searchParams) => {
+        //     searchParams.delete(tag)
+        //     console.log(searchParams.toString())
+        //     return searchParams
+        // })
     }
 
     function deleteSearchParamsTagValue (tag, value) {
@@ -102,19 +104,33 @@ const MapPage = () => {
         navigate(-1)
     }
 
-    async function fetchAndSetStory (storyId) {
-        let fetched = await fetchData()
-        setShowAuthor(false)
-        let arr = new Array(...fetched)
-        let index = arr.findIndex(a => a.storyId == storyId)
+    function makeStoryShow(allStories, storyId) {
+        let index = allStories.findIndex(a => a.storyId == storyId)
         if (index > -1) {
 
             console.log("index", index)
-            let story = arr[index]
+            let story = allStories[index]
             setSelectedMarkerIndex(index)
             setShowStory(true)
             setStoryShowed(story)
+            mymap?.flyTo({
+                center: [story.longitude, story.latitude],
+                zoom: 15,
+                speed: 1.3,
+                curve: 1
+            })
         }
+    }
+
+    async function fetchAndSetStory (storyId) {
+        let fetched = stories
+        if (!fetchedInitialStory) {
+            fetched = await fetchData()
+            setFetchedInitialStory(true)
+        }
+        setShowAuthor(false)
+        let arr = new Array(...fetched)
+        makeStoryShow(arr, storyId)
     }
 
     useEffect(() => {
@@ -123,7 +139,18 @@ const MapPage = () => {
         if (searchParams.has("authorId")) {
             let id = searchParams.get("authorId")
             if (id != author._id) {
-                fetchAuthorStories(id)
+                let storiesByAuthor = fetchAuthorStories(id)
+                if (searchParams.has("storyId")) {
+                    let idStory = searchParams.get("storyId")
+                    makeStoryShow(storiesByAuthor, idStory)
+                } else {
+                    mymap?.flyTo({
+                        center: [37.61, 55.75],
+                        zoom: 9,
+                        speed: 1.3,
+                        curve: 1
+                    })
+                }
             } else {
                 console.log("ME")
             }
@@ -134,9 +161,10 @@ const MapPage = () => {
                 fetchAndSetStory(id)
             } else {
                 fetchData()
+                
             }
         }
-    }, [])
+    }, [searchParams])
 
 
     async function createStory () {
@@ -160,7 +188,6 @@ const MapPage = () => {
 
     async function getStoriesByAuthor (authorId) {
         await fetchAuthorStories(authorId)
-        setSearchParams({"authorId": authorId})
         setShowStory(false)
         setSelectedMarkerIndex(-1)
         setStoryShowed(null)
@@ -283,8 +310,9 @@ const MapPage = () => {
 
                                 setShowStory(true)
                                 setStoryShowed(story)
-                                setSearchParams({"storyId": story.storyId})
+                                addSearchParam("storyId", story.storyId)
                                 console.log(story)
+                                console.log("marker click")
                             }}
                         >
                             <Pin selected={selectedMarkerIndex == key} />
@@ -374,7 +402,7 @@ const MapPage = () => {
                     <div className='inputBlock'>
                         <Form.Label>Фотографии</Form.Label>
                         <Form.Control onChange={e => setNewStoryImages(e.target.value)}
-                        value={"https://avatars.mds.yandex.net/get-vertis-journal/4220003/obl_morya.jpg_1709481724185/orig"} />
+                        value={""} />
                     </div>
                     <div className="newStoryButtons">
                         <button onClick={createStory}>
@@ -414,6 +442,9 @@ const MapPage = () => {
                     }
                     setShowStory(false)
                     setSelectedMarkerIndex(-1)
+
+                    deleteSearchParamsTagAll("storyId")
+                    goBack()
                 }} />
                 {/* <button onClick={() => {
                     if (!zoomed) {
@@ -431,7 +462,7 @@ const MapPage = () => {
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>
-                <div className="storyAuthor" onClick={() => getStoriesByAuthor(storyShowed?.authorId)}>
+                <div className="storyAuthor" onClick={() => setSearchParams({"authorId": storyShowed?.authorId})}>
                     {storyShowed?.authorName}
                     <button className='followButton'>
                         Подписаться
