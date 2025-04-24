@@ -26,6 +26,12 @@ const storySchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    likedAuthorsId: [{
+        type: String
+    }],
+    dislikedAuthorsId: [{
+        type: String
+    }],
     createdAt: {
         type: Date,
     }

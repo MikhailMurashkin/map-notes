@@ -3,8 +3,8 @@ import moment from 'moment-timezone'
 
 import Author from '../models/Author.js'
 import Story from '../models/Story.js'
-// import GroupMatch from '../models/GroupMatch.js';
-// import Chat from '../models/Chat.js';
+// import GroupMatch from '../models/GroupMatch.js'
+// import Chat from '../models/Chat.js'
 import protect from '../middleware/authMiddleware.js'
 const storyRoutes = express.Router()
 
@@ -37,6 +37,7 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
         let stories = await Story.find({ })
         let authors = await Author.find({ })
 
+
         let storiesExtended = []
         stories.forEach(story => {
             story = story._doc
@@ -46,10 +47,21 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
 
             story.authoredByMe = story.authorId == req.author
 
+            let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
+            story.subscribedByMe = mySubscribers.indexOf(story.authorId) == -1 ? false : true
+
+            story.likedByMe = story.likedAuthorsId.indexOf(req.author) == -1 ? false : true
+            story.dislikedByMe = story.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
+
+            story.ammountOfLikes = story.likedAuthorsId.length
+            story.ammountOfDislikes = story.dislikedAuthorsId.length
+            delete story.likedAuthorsId
+            delete story.dislikedAuthorsId
+
             storiesExtended.push(story)
         })
 
-        res.json(storiesExtended);
+        res.json(storiesExtended)
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Server error' });
@@ -106,6 +118,75 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
 })
 
 
+storyRoutes.post('/likeStory', protect, async (req, res) => {
+  try {
+      const { storyId } = req.body
+      let story = await Story.findOneAndUpdate({ storyId })
+
+      if (story.likedAuthorsId.indexOf(req.author) >= 0) {
+        await Story.findByIdAndUpdate({ storyId }, {
+          $pull: {likedAuthorsId: req.author}
+        })
+      } else {
+        await Story.findByIdAndUpdate({ storyId }, {
+          $push: {likedAuthorsId: req.author},
+          $pull: {dislikedAuthorsId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Like updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
+
+
+storyRoutes.post('/dislikeStory', protect, async (req, res) => {
+  try {
+      const { storyId } = req.body
+      let story = await Story.findOneAndUpdate({ storyId })
+
+      if (story.dislikedAuthorsId.indexOf(req.author) >= 0) {
+        await Story.findByIdAndUpdate({ storyId }, {
+          $pull: {dislikedAuthorsId: req.author}
+        })
+      } else {
+        await Story.findByIdAndUpdate({ storyId }, {
+          $push: {dislikedAuthorsId: req.author},
+          $pull: {likedAuthorsId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Dislike updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
+
+
+storyRoutes.post('/subscribeAuthor', protect, async (req, res) => {
+  try {
+      const { authorId } = req.body
+      let author = await Author.findById({ authorId })
+
+      if (author.subscribersId.indexOf(req.author) < 0) {
+        await Author.findByIdAndUpdate({ authorId }, {
+          $push: {subscribersId: req.author}
+        })
+      } else {
+        await Author.findByIdAndUpdate({ authorId }, {
+          $pull: {subscribersId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Subscription updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
 
 
 
