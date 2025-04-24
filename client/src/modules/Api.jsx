@@ -140,6 +140,28 @@ export const subscribeApi = async (authorId) => {
 }
 
 
+export const commentApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/comment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      storyId, commentText
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось добавить комментарий к истории')
+  }
+
+  return data
+}
+
+
 
 
 
