@@ -76,6 +76,91 @@ export const getStoriesByAuthorIdApi = async (authorId) => {
   return data
 }
 
+export const likeStoryApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/likeStory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      storyId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось поставить истории отметку нравится')
+  }
+
+  return data
+}
+
+export const dislikeStoryApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/dislikeStory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      storyId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось поставить истории отметку не нравится')
+  }
+
+  return data
+}
+
+export const subscribeApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/subscribeAuthor`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      authorId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось подписаться на автора')
+  }
+
+  return data
+}
+
+
+export const commentApi = async (authorId) => {
+  const response = await fetch(`${API_URL}/stories/comment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      storyId, commentText
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось добавить комментарий к истории')
+  }
+
+  return data
+}
+
 
 
 

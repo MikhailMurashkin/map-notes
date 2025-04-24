@@ -17,7 +17,10 @@ const authorSchema = new mongoose.Schema({
     },
     image: {
         type: String
-    }
+    },
+    subscribersId: [{
+        type: String
+    }]
 }, { timestamps: true })
 
 authorSchema.pre('save', async function (next) {
