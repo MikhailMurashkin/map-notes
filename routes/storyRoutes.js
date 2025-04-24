@@ -3,6 +3,7 @@ import moment from 'moment-timezone'
 
 import Author from '../models/Author.js'
 import Story from '../models/Story.js'
+import Comment from '../models/Comment.js'
 // import GroupMatch from '../models/GroupMatch.js'
 // import Chat from '../models/Chat.js'
 import protect from '../middleware/authMiddleware.js'
@@ -36,6 +37,7 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
     try {
         let stories = await Story.find({ })
         let authors = await Author.find({ })
+        let comments = await Comment.find({ })
 
 
         let storiesExtended = []
@@ -57,6 +59,19 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
             story.ammountOfDislikes = story.dislikedAuthorsId.length
             delete story.likedAuthorsId
             delete story.dislikedAuthorsId
+
+            let storyComments = []
+
+            comments.forEach(comment => {
+              if (comment.storyId == story.storyId) {
+                comment = comment._doc
+                let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+                comment.authorName = authors[commentAuthorI].name
+                storyComments.push(comment)
+              }
+            })
+
+            story.comments = storyComments.reverse()
 
             storiesExtended.push(story)
         })
@@ -121,7 +136,7 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
 storyRoutes.post('/likeStory', protect, async (req, res) => {
   try {
       const { storyId } = req.body
-      let story = await Story.findOneAndUpdate({ storyId })
+      let story = await Story.findOne({ storyId })
 
       if (story.likedAuthorsId.indexOf(req.author) >= 0) {
         await Story.findByIdAndUpdate({ storyId }, {
@@ -145,7 +160,7 @@ storyRoutes.post('/likeStory', protect, async (req, res) => {
 storyRoutes.post('/dislikeStory', protect, async (req, res) => {
   try {
       const { storyId } = req.body
-      let story = await Story.findOneAndUpdate({ storyId })
+      let story = await Story.findOne({ storyId })
 
       if (story.dislikedAuthorsId.indexOf(req.author) >= 0) {
         await Story.findByIdAndUpdate({ storyId }, {
@@ -185,6 +200,29 @@ storyRoutes.post('/subscribeAuthor', protect, async (req, res) => {
   } catch (error) {
       console.log(error)
       res.status(500).json({ message: 'Server error' });
+  }
+})
+
+
+storyRoutes.post('/comment', protect, async (req, res) => {
+  try {
+      const { storyId, commentText } = req.body
+      let story = await Story.findOne({ storyId })
+      if(!story) {
+        res.status(404).json({ message: 'Wrong story id' });
+      }
+
+      const comment = await Comment.create({
+          storyId,
+          authorId: req.author,
+          commentText,
+          createdAt: Date.now()
+      })
+
+      res.status(201).json({ message: 'Comment added' })
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
   }
 })
 
