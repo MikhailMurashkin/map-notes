@@ -34,53 +34,53 @@ storyRoutes.post('/createStory', protect, async (req, res) => {
 })
 
 storyRoutes.get('/getStories', protect, async (req, res) => {
-    try {
-        let stories = await Story.find({ })
-        let authors = await Author.find({ })
-        let comments = await Comment.find({ })
+  try {
+      let stories = await Story.find({ })
+      let authors = await Author.find({ })
+      let comments = await Comment.find({ })
 
 
-        let storiesExtended = []
-        stories.forEach(story => {
-            story = story._doc
+      let storiesExtended = []
+      stories.forEach(story => {
+          story = story._doc
 
-            let authorI = authors.findIndex(a => a.id == story.authorId)
-            story.authorName = authors[authorI].name
+          let authorI = authors.findIndex(a => a.id == story.authorId)
+          story.authorName = authors[authorI].name
 
-            story.authoredByMe = story.authorId == req.author
+          story.authoredByMe = story.authorId == req.author
 
-            let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
-            story.subscribedByMe = mySubscribers.indexOf(story.authorId) == -1 ? false : true
+          let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
+          story.subscribedByMe = mySubscribers.indexOf(story.authorId) == -1 ? false : true
 
-            story.likedByMe = story.likedAuthorsId.indexOf(req.author) == -1 ? false : true
-            story.dislikedByMe = story.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
+          story.likedByMe = story.likedAuthorsId.indexOf(req.author) == -1 ? false : true
+          story.dislikedByMe = story.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
 
-            story.ammountOfLikes = story.likedAuthorsId.length
-            story.ammountOfDislikes = story.dislikedAuthorsId.length
-            delete story.likedAuthorsId
-            delete story.dislikedAuthorsId
+          story.ammountOfLikes = story.likedAuthorsId.length
+          story.ammountOfDislikes = story.dislikedAuthorsId.length
+          delete story.likedAuthorsId
+          delete story.dislikedAuthorsId
 
-            let storyComments = []
+          let storyComments = []
 
-            comments.forEach(comment => {
-              if (comment.storyId == story.storyId) {
-                comment = comment._doc
-                let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
-                comment.authorName = authors[commentAuthorI].name
-                storyComments.push(comment)
-              }
-            })
+          comments.forEach(comment => {
+            if (comment.storyId == story.storyId) {
+              comment = comment._doc
+              let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+              comment.authorName = authors[commentAuthorI].name
+              storyComments.push(comment)
+            }
+          })
 
-            story.comments = storyComments.reverse()
+          story.comments = storyComments.reverse()
 
-            storiesExtended.push(story)
-        })
+          storiesExtended.push(story)
+      })
 
-        res.json(storiesExtended)
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: 'Server error' });
-    }
+      res.json(storiesExtended)
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
 })
 
 storyRoutes.get('/getMyStories', protect, async (req, res) => {
