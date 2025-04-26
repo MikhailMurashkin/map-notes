@@ -29,11 +29,16 @@ const Comments = (props) => {
                 Комментарии ({commentsArr.length})
             </div>
             <div className="commentsDisplay">
+                {commentsShowed.map((comment, i) => {
+                    return(
                 <div className="comment">
                     <div className="commentAuthor">Author</div>
                     <div className="commentText">TEXTtext</div>
                     <div className="commentDate">date</div>
                 </div>
+                    )
+                })
+                }
             </div>
             {commentsArr.length >= 0 &&
             <div className="pagination">
