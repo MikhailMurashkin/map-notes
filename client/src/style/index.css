@@ -338,3 +338,27 @@ button:hover {
   line-height: 40px;
   cursor: default;
 }
+
+.likesBlock {
+  display: flex;
+  flex-direction: row;
+  column-gap: 20px;
+  justify-content: center;
+}
+
+.likeIcon {
+  /* background-color: aquamarine; */
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.likes, .dislikes {
+  text-align: center;
+  cursor: pointer;
+}
+
+.commentsCount {
+  font-weight: 700;
+}

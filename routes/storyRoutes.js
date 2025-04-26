@@ -139,11 +139,11 @@ storyRoutes.post('/likeStory', protect, async (req, res) => {
       let story = await Story.findOne({ storyId })
 
       if (story.likedAuthorsId.indexOf(req.author) >= 0) {
-        await Story.findByIdAndUpdate({ storyId }, {
+        await Story.findOneAndUpdate({ storyId }, {
           $pull: {likedAuthorsId: req.author}
         })
       } else {
-        await Story.findByIdAndUpdate({ storyId }, {
+        await Story.findOneAndUpdate({ storyId }, {
           $push: {likedAuthorsId: req.author},
           $pull: {dislikedAuthorsId: req.author}
         })
@@ -163,11 +163,11 @@ storyRoutes.post('/dislikeStory', protect, async (req, res) => {
       let story = await Story.findOne({ storyId })
 
       if (story.dislikedAuthorsId.indexOf(req.author) >= 0) {
-        await Story.findByIdAndUpdate({ storyId }, {
+        await Story.findOneAndUpdate({ storyId }, {
           $pull: {dislikedAuthorsId: req.author}
         })
       } else {
-        await Story.findByIdAndUpdate({ storyId }, {
+        await Story.findOneAndUpdate({ storyId }, {
           $push: {dislikedAuthorsId: req.author},
           $pull: {likedAuthorsId: req.author}
         })

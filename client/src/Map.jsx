@@ -5,7 +5,7 @@ import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from './modules/AuthContext'
 import {
     createStoryApi, getStoriesApi, getMyStoriesApi,
-    getStoriesByAuthorIdApi
+    getStoriesByAuthorIdApi, likeStoryApi, dislikeStoryApi
 } from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -14,9 +14,10 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
 } from 'react-map-gl/maplibre'
 
 import { Button, Form, Image, Carousel, Offcanvas,  ListGroup } from 'react-bootstrap';
-import { ArrowLeft, List, BoxArrowRight } from 'react-bootstrap-icons'
+import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, HandThumbsUpFill } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
+import Comments from './Comments'
 
 
 
@@ -107,12 +108,11 @@ const MapPage = () => {
     function makeStoryShow(allStories, storyId) {
         let index = allStories.findIndex(a => a.storyId == storyId)
         if (index > -1) {
-
-            console.log("index", index)
             let story = allStories[index]
             setSelectedMarkerIndex(index)
             setShowStory(true)
             setStoryShowed(story)
+            console.log(story)
             mymap?.flyTo({
                 center: [story.longitude, story.latitude],
                 zoom: 15,
@@ -194,6 +194,20 @@ const MapPage = () => {
         setShowAuthor(true)
         // setFetch(!fetch)
         console.log("search", searchParams)
+    }
+
+    async function likeAndUpdate (storyId) {
+        await likeStoryApi(storyId)
+        let updated = await fetchData()
+        let story = updated.find(a => a.storyId == storyId)
+        setStoryShowed(story)
+    }
+
+    async function dislikeAndUpdate (storyId) {
+        await dislikeStoryApi(storyId)
+        let updated = await fetchData()
+        let story = updated.find(a => a.storyId == storyId)
+        setStoryShowed(story)
     }
 
     const formatDate = (dateStr) => {
@@ -485,6 +499,29 @@ const MapPage = () => {
                 <div className="storyDate">
                     История опубликована {formatDate(storyShowed?.createdAt)}
                 </div>
+                <div className="likesBlock">
+                    <div className="likes" onClick={() => {likeAndUpdate(storyShowed.storyId)}}>
+                        <div className="likeIcon">
+                            <HandThumbsUpFill size={26} 
+                            color={storyShowed?.likedByMe ? "green" : "rgba(0,128,0,0.5)"} />
+                        </div>
+                        <div className="liketext" 
+                        style = {{color: storyShowed?.likedByMe ? "green" : "rgba(0,128,0,0.5)"}}>
+                            {storyShowed?.ammountOfLikes}
+                        </div>
+                    </div>
+                    <div className="dislikes" onClick={() => {dislikeAndUpdate(storyShowed.storyId)}}>
+                        <div className="likeIcon">
+                            <HandThumbsDownFill size={26} 
+                            color={storyShowed?.dislikedByMe ? "red" : "rgba(255,0,0,0.5)"}  />
+                        </div>
+                        <div className="liketext" style={{color: storyShowed?.dislikedByMe ? "red" : "rgba(255,0,0,0.5)"}}>
+                            {storyShowed?.ammountOfDislikes}
+                        </div>
+                    </div>
+                </div>
+
+                <Comments list={storyShowed.comments} dateFunc={formatDate} />
                 
             </div>
             }

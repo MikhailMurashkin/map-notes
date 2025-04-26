@@ -76,7 +76,7 @@ export const getStoriesByAuthorIdApi = async (authorId) => {
   return data
 }
 
-export const likeStoryApi = async (authorId) => {
+export const likeStoryApi = async (storyId) => {
   const response = await fetch(`${API_URL}/stories/likeStory`, {
     method: 'POST',
     headers: {
@@ -97,7 +97,7 @@ export const likeStoryApi = async (authorId) => {
   return data
 }
 
-export const dislikeStoryApi = async (authorId) => {
+export const dislikeStoryApi = async (storyId) => {
   const response = await fetch(`${API_URL}/stories/dislikeStory`, {
     method: 'POST',
     headers: {
@@ -140,7 +140,7 @@ export const subscribeApi = async (authorId) => {
 }
 
 
-export const commentApi = async (authorId) => {
+export const commentApi = async (storyId) => {
   const response = await fetch(`${API_URL}/stories/comment`, {
     method: 'POST',
     headers: {
