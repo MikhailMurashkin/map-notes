@@ -83,54 +83,53 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
   }
 })
 
-storyRoutes.get('/getMyStories', protect, async (req, res) => {
-    try {
-        let myStories = await Story.find({ authorId: req.author})
-        let me = await Author.findOneById( req.author )
-
-        let myStoriesExtended = []
-        myStories.forEach(myStory => {
-            myStory = myStory._doc
-
-            myStory.authorName = me.name
-
-            myStory.authoredByMe = true
-
-            myStoriesExtended.push(myStory)
-        })
-
-        res.json(myStoriesExtended);
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: 'Server error' });
-    }
-})
-
-
 storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
     try {
         const { authorId } = req.body
-        console.log(authorId)
-        let storiesByAuthor = await Story.find({ authorId: req.body.authorId})
-        let author = await Author.findById(authorId)
+        let authorStories = await Story.find({ authorId: authorId || req.author})
+        let author = await Author.findById( authorId || req.author )
+        let comments = await Comment.find({ })
 
-        let storiesByAuthorExtended = []
-        storiesByAuthor.forEach(storyByAuthor => {
-            storyByAuthor = storyByAuthor._doc
+        let authorStoriesExtended = []
+        authorStories.forEach(authorStory => {
+            authorStory = authorStory._doc
 
-            storyByAuthor.authorName = author.name
+            authorStory.authorName = author.name
 
-            storyByAuthor.authoredByMe = author.authorId == req.author
+            authorStory.authoredByMe = authorStory.authorId == req.author
 
-            storiesByAuthorExtended.push(storyByAuthor)
+            authorStory.likedByMe = authorStory.likedAuthorsId.indexOf(req.author) == -1 ? false : true
+            authorStory.dislikedByMe = authorStory.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
+
+              
+            authorStory.ammountOfLikes = authorStory.likedAuthorsId.length
+            authorStory.ammountOfDislikes = authorStory.dislikedAuthorsId.length
+            delete authorStory.likedAuthorsId
+            delete authorStory.dislikedAuthorsId
+
+            let authorStoryComments = []
+  
+            comments.forEach(comment => {
+              if (comment.storyId == authorStory.storyId) {
+                comment = comment._doc
+                let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+                comment.authorName = authors[commentAuthorI].name
+                authorStoryComments.push(comment)
+              }
+            })
+  
+            authorStory.comments = authorStoryComments.reverse()
+
+            authorStoriesExtended.push(authorStory)
         })
 
-        res.json(storiesByAuthorExtended);
+        res.json(authorStoriesExtended)
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error' })
     }
 })
+
 
 
 storyRoutes.post('/likeStory', protect, async (req, res) => {

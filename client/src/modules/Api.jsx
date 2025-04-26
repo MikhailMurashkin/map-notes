@@ -38,23 +38,6 @@ export const getStoriesApi = async () => {
   return data
 }
 
-export const getMyStoriesApi = async () => {
-  const response = await fetch(`${API_URL}/stories/getMyStories`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem("token")}`,
-    }
-  })
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Не удалось получить список моих историй')
-  }
-
-  return data
-}
-
 export const getStoriesByAuthorIdApi = async (authorId) => {
   const response = await fetch(`${API_URL}/stories/getStoriesByAuthorId`, {
     method: 'POST',
