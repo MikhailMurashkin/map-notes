@@ -579,7 +579,9 @@ const MapPage = () => {
                 </div>
                 <div className="menuLinks">
                     <div className="menuLink">Главная страница</div>
-                    <div className="menuLink">Мои истории</div>
+                    <div className="menuLink" onClick={() => {
+                        getStoriesByAuthorIdApi()
+                    }}>Мои истории</div>
                     <div className="menuLink">Мои подписки</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>
