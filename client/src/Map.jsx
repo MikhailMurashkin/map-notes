@@ -4,8 +4,8 @@ import { useState, useContext, useEffect } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
 import {
-    createStoryApi, getStoriesApi, getMyStoriesApi,
-    getStoriesByAuthorIdApi, likeStoryApi, dislikeStoryApi
+    createStoryApi, getStoriesApi, subscribeApi,
+    getStoriesByAuthorIdApi, likeStoryApi, dislikeStoryApi, commentApi
 } from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -14,7 +14,8 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
 } from 'react-map-gl/maplibre'
 
 import { Button, Form, Image, Carousel, Offcanvas,  ListGroup } from 'react-bootstrap';
-import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, HandThumbsUpFill } from 'react-bootstrap-icons'
+import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, 
+    HandThumbsUpFill, ArrowUpCircleFill } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
 import Comments from './Comments'
@@ -48,6 +49,7 @@ const MapPage = () => {
 
     const [showStory, setShowStory] = useState(false)
     const [storyShowed, setStoryShowed] = useState(null)
+    const [newComment, setNewComment] = useState("")
 
     const [lastCenter, setLastCenter] = useState([37.61, 55.75])
     const [lastZoom, setLastZoom] = useState(9)
@@ -55,6 +57,7 @@ const MapPage = () => {
 
     const [showMenu, setShowMenu] = useState(false)
     const [showAuthor, setShowAuthor] = useState(false)
+    const [showSubscriptions, setShowSubscriptions] = useState(false)
 
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
@@ -106,12 +109,14 @@ const MapPage = () => {
     }
 
     function makeStoryShow(allStories, storyId) {
-        let index = allStories.findIndex(a => a.storyId == storyId)
+        let arr = new Array(...allStories)
+        let index = arr.findIndex(a => a.storyId == storyId)
         if (index > -1) {
-            let story = allStories[index]
+            let story = arr[index]
             setSelectedMarkerIndex(index)
             setShowStory(true)
             setStoryShowed(story)
+            setNewComment("")
             console.log(story)
             mymap?.flyTo({
                 center: [story.longitude, story.latitude],
@@ -126,6 +131,7 @@ const MapPage = () => {
         let fetched = stories
         if (!fetchedInitialStory) {
             fetched = await fetchData()
+            setStories(fetched)
             setFetchedInitialStory(true)
         }
         setShowAuthor(false)
@@ -133,26 +139,62 @@ const MapPage = () => {
         makeStoryShow(arr, storyId)
     }
 
+    async function showAuthorStory (authorId, storyId) {
+        let fetched = stories
+        if (!fetchedInitialStory) {
+            fetched = await getStoriesByAuthorIdApi(authorId)
+            setStories(fetched)
+            setFetchedInitialStory(true)
+        }
+        setShowAuthor(false)
+        let arr = new Array(...fetched)
+        makeStoryShow(arr, storyId)
+    }
+
+    async function showAuthorPage (authorId) {
+        let fetched = await getStoriesByAuthorIdApi(authorId)
+        setStories(fetched)
+        console.log(fetched)
+
+        setShowStory(false)
+        setStoryShowed(null)
+        setSelectedMarkerIndex(-1)
+        setShowAuthor(true)
+
+        mymap?.flyTo({
+            center: [37.61, 55.75],
+            zoom: 9,
+            speed: 1.3,
+            curve: 1
+        })
+    }
+
     useEffect(() => {
         console.log('useeffect')
         console.log(author)
         if (searchParams.has("authorId")) {
+                    setShowStory(false)
+                    setStoryShowed(null)
+                    setShowAuthor(true)
             let id = searchParams.get("authorId")
             if (id != author._id) {
-                let storiesByAuthor = fetchAuthorStories(id)
                 if (searchParams.has("storyId")) {
                     let idStory = searchParams.get("storyId")
-                    makeStoryShow(storiesByAuthor, idStory)
+                    showAuthorStory(id, idStory)
+                    console.log('show story')
                 } else {
-                    mymap?.flyTo({
-                        center: [37.61, 55.75],
-                        zoom: 9,
-                        speed: 1.3,
-                        curve: 1
-                    })
+                    showAuthorPage(id)
+                    console.log('show page')
                 }
             } else {
                 console.log("ME")
+                if (searchParams.has("storyId")) {
+                    let idStory = searchParams.get("storyId")
+                    showAuthorStory(null, idStory)
+                } else {
+                    showAuthorPage(null)
+                    
+                }
             }
         }
         else {
@@ -161,7 +203,12 @@ const MapPage = () => {
                 fetchAndSetStory(id)
             } else {
                 fetchData()
-                
+                mymap?.flyTo({
+                    center: [37.61, 55.75],
+                    zoom: 9,
+                    speed: 1.3,
+                    curve: 1
+                })
             }
         }
     }, [searchParams])
@@ -207,6 +254,15 @@ const MapPage = () => {
         await dislikeStoryApi(storyId)
         let updated = await fetchData()
         let story = updated.find(a => a.storyId == storyId)
+        setStoryShowed(story)
+    }
+
+    async function sendComment (storyId) {
+        await commentApi(storyId, newComment)
+        setNewComment("")
+        let updated = await fetchData()
+        let story = updated.find(a => a.storyId == storyId)
+        console.log("new", story)
         setStoryShowed(story)
     }
 
@@ -390,13 +446,8 @@ const MapPage = () => {
                 </button>}
                 <List size={24} className='menuButton' onClick={() => setShowMenu(true)} />
                 
-                {/* <div className="profilePic">
-                    <Image src="/profile-icon.png" roundedCircle fluid 
-                    style={{cursor: "pointer"}}/>
-                    {author.name}
-                </div> */}
+             
             </div>
-            {/* <button className='mapButton'>Создать историю</button> */}
 
 
             {/* НОВАЯ ИСТОРИЯ */}
@@ -522,6 +573,23 @@ const MapPage = () => {
                 </div>
 
                 <Comments list={storyShowed.comments} dateFunc={formatDate} />
+                <div className="sendComment">
+                    <textarea className='commentArea' rows={2} value={newComment}
+                        placeholder='Напишите комментарий' id='commentArea'
+                        onChange={(e) => {
+                            setNewComment(e.target.value)
+                        }} />
+                        <div className="sendCommentButton">
+                            <ArrowUpCircleFill size={32} 
+                            style={{cursor: newComment.length > 0 ? 'pointer' : 'initial'}} 
+                            color={newComment.length > 0 ? 'black' : 'gray'} 
+                            onClick={() => {
+                                if (newComment.length > 0) {
+                                    sendComment(storyShowed.storyId)
+                                }
+                            }} />
+                        </div>
+                </div>
                 
             </div>
             }
@@ -538,17 +606,18 @@ const MapPage = () => {
                     goBack()
                     // deleteSearchParamsTagValue("authorId", auth)
                 }} />
-                    <div className="profilePageIcon">{author.name[0]}</div>
-                    {author.name}
-                    <button className='followButton'>
-                        Подписаться
+                    <div className="profilePageIcon">{stories[0]?.authorName[0]}</div>
+                    {stories[0]?.authorName}
+                    <button className='followButton' onClick={() => subscribeApi(stories[0]?.authorId)}>
+                        {new Array(...author.subscribersId).findIndex(id => id == stories[0]?.authorId) > -1 ?
+                        'Отписаться' :'Подписаться'}
                     </button>
                 </div>
                 {stories.length > 0 &&
                 <div className="authorStoriesBlock">
                     {stories.map((story, i) => {
                         return(
-                            <div className="authorStory" key={i}>
+                            <div className="authorStory" key={i} onClick={() => makeStoryShow(stories, story.storyId)}>
                                 <div className="authorStoryName">{story?.storyName}</div>
                                 <div className="authorStoryBody">
                                     {new Array(...story?.storyImages).length > 0 &&
@@ -580,7 +649,8 @@ const MapPage = () => {
                 <div className="menuLinks">
                     <div className="menuLink">Главная страница</div>
                     <div className="menuLink" onClick={() => {
-                        getStoriesByAuthorIdApi()
+                        setSearchParams({"authorId": author._id})
+                        showAuthorPage(null)
                     }}>Мои истории</div>
                     <div className="menuLink">Мои подписки</div>
                 </div>

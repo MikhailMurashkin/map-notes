@@ -109,13 +109,15 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
 
             let authorStoryComments = []
   
-            comments.forEach(comment => {
-              if (comment.storyId == authorStory.storyId) {
-                comment = comment._doc
-                let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
-                comment.authorName = authors[commentAuthorI].name
-                authorStoryComments.push(comment)
-              }
+            Author.find({}).then(authors => {
+              comments.forEach(comment => {
+                if (comment.storyId == authorStory.storyId) {
+                  comment = comment._doc
+                  let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+                  comment.authorName = authors[commentAuthorI].name
+                  authorStoryComments.push(comment)
+                }
+              })
             })
   
             authorStory.comments = authorStoryComments.reverse()

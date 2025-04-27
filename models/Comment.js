@@ -2,8 +2,7 @@ import mongoose from 'mongoose'
 
 const commentSchema = new mongoose.Schema({
     storyId: {
-        type: String,
-        unique: true
+        type: String
     },
     authorId: {
         type: String,

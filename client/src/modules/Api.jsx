@@ -123,7 +123,7 @@ export const subscribeApi = async (authorId) => {
 }
 
 
-export const commentApi = async (storyId) => {
+export const commentApi = async (storyId, commentText) => {
   const response = await fetch(`${API_URL}/stories/comment`, {
     method: 'POST',
     headers: {

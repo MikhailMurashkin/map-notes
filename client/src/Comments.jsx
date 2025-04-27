@@ -6,22 +6,25 @@ import { AuthContext } from './modules/AuthContext'
 import {Pagination} from 'react-bootstrap'
 
 const Comments = (props) => {
-    const commentsArr = new Array(...props.list)
 
     const [page, setPage] = useState(1)
     const [pagesCount, setPagesCount] = useState(1)
+
+    const [commentsArr, setCommentsArr] = useState([])
     const [commentsShowed, setCommentsShowed] = useState([])
 
     useEffect(() => {
-        setPagesCount(Math.ceil(commentsArr.length/5))
+        let arr = new Array(...props.list)
+        setCommentsArr(arr)
+        setPagesCount(Math.ceil(arr.length/5))
 
         let newArr = []
-        let stop = 5 * page > commentsArr.length ? commentsArr.length : 5 * page
+        let stop = 5 * page > arr.length ? arr.length : 5 * page
         for (let i = 5 * (page - 1); i < stop; i++) {
-            newArr.push(commentsArr[i])
+            newArr.push(arr[i])
         }
         setCommentsShowed(newArr)
-      }, [page])
+      }, [page, props.list])
 
     return(
         <div className="commentsBlock">
@@ -31,16 +34,16 @@ const Comments = (props) => {
             <div className="commentsDisplay">
                 {commentsShowed.map((comment, i) => {
                     return(
-                <div className="comment">
-                    <div className="commentAuthor">Author</div>
-                    <div className="commentText">TEXTtext</div>
-                    <div className="commentDate">date</div>
-                </div>
+                        <div className="comment" key={i}>
+                            <div className="commentAuthor">{comment.authorName}</div>
+                            <div className="commentText">{comment.commentText}</div>
+                            <div className="commentDate">{props.dateFunc(comment.createdAt)}</div>
+                        </div>
                     )
                 })
                 }
             </div>
-            {commentsArr.length >= 0 &&
+            {commentsArr.length > 5 &&
             <div className="pagination">
                 <Pagination>
                     {page > 3 && <Pagination.First onClick={() => setPage(1)} />}

@@ -91,7 +91,7 @@ button:hover {
 }
 
 .storyBlock {
-  padding: 20px 20px 40px 20px;
+  padding: 20px 20px 20px 20px;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -144,7 +144,7 @@ button:hover {
   word-wrap: break-word;
 }
 
-.storyDate {
+.storyDate, .commentDate {
   color: rgb(117, 117, 117);
   font-style: italic;
   font-size: 13px;
@@ -361,4 +361,55 @@ button:hover {
 
 .commentsCount {
   font-weight: 700;
+}
+
+.commentArea {
+  width: 100%;
+  resize: none;
+  background-color: rgb(245, 245, 245);
+  color: black;
+  border-radius: 16px;
+  padding: 5px 20px;
+  outline: none;
+  border: 2px solid gray;
+}
+
+.pagination {
+  --bs-pagination-color: #3a4635 !important;
+    --bs-pagination-bg: var(--bs-body-bg);
+    --bs-pagination-border-width: var(--bs-border-width);
+    --bs-pagination-border-color: var(--bs-border-color);
+    --bs-pagination-border-radius: var(--bs-border-radius);
+    --bs-pagination-hover-color: green !important;
+    --bs-pagination-hover-bg: var(--bs-tertiary-bg);
+    --bs-pagination-hover-border-color: var(--bs-border-color);
+    --bs-pagination-focus-color: green !important;
+    --bs-pagination-focus-bg: var(--bs-secondary-bg);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(156, 188, 142, 0.25) !important;
+    --bs-pagination-active-color: black !important;
+    --bs-pagination-active-bg: #C3ECB2 !important;
+    --bs-pagination-active-border-color: #C3ECB2 !important;
+}
+
+.sendComment {
+  display: flex;
+  flex-direction: row;
+  column-gap: 10px;
+  align-items: center;
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+  font-size: 14px;
+  padding: 10px 4px;
+}
+
+.comment + .comment {
+  border-top: 1px solid black;
+}
+
+.commentAuthor {
+  font-weight: 600;
 }
