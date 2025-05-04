@@ -14,6 +14,7 @@ const Comments = (props) => {
     const [commentsShowed, setCommentsShowed] = useState([])
 
     useEffect(() => {
+        console.log("coms", props.list)
         let arr = new Array(...props.list)
         setCommentsArr(arr)
         setPagesCount(Math.ceil(arr.length/5))

@@ -89,6 +89,7 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
         let authorStories = await Story.find({ authorId: authorId || req.author})
         let author = await Author.findById( authorId || req.author )
         let comments = await Comment.find({ })
+        let authors = await Author.find({ })
 
         let authorStoriesExtended = []
         authorStories.forEach(authorStory => {
@@ -107,9 +108,12 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
             delete authorStory.likedAuthorsId
             delete authorStory.dislikedAuthorsId
 
+            let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
+            authorStory.subscribedByMe = mySubscribers.indexOf(authorStory.authorId) == -1 ? false : true
+
             let authorStoryComments = []
   
-            Author.find({}).then(authors => {
+            // Author.find({}).then(authors => {
               comments.forEach(comment => {
                 if (comment.storyId == authorStory.storyId) {
                   comment = comment._doc
@@ -118,7 +122,7 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
                   authorStoryComments.push(comment)
                 }
               })
-            })
+            
   
             authorStory.comments = authorStoryComments.reverse()
 

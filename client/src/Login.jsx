@@ -4,19 +4,22 @@ import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from './modules/AuthContext'
 
 import Button from 'react-bootstrap/Button'
+import { Eye, EyeSlash } from 'react-bootstrap-icons'
 
 const Login = () => {
     const [email, setEmail] = useState('varya@email.com');
     const [password, setPassword] = useState('password');
     const [checked, setChecked] = useState(false);
     const [inputColor, setInputColor] = useState('grey');
+    const [showPassword, setShowPassword] = useState(false);
+
     const { login, user } = useContext(AuthContext);
     const navigate = useNavigate();
   
     useEffect(() => {
       if (!checked) {
         if(localStorage.getItem('token')) {
-          navigate('/groups')
+          navigate('/')
         }
         setChecked(true)
       }
@@ -35,11 +38,26 @@ const Login = () => {
     return (
         <form onSubmit={handleSubmit}>
             <div className="loginForm">
+              <img src='../public/background.jpg' className='backgroundImg' />
                 <div className="title">Вход в аккаунт</div>
                 <div className="inputs">
-                <input className="basicInput" type="email" placeholder="Email" value={email} style={{borderColor: inputColor}} onFocus={() => setInputColor('grey')} onChange={(e) => setEmail(e.target.value)} required />
-                <input className="basicInput" type="password" placeholder="Пароль" value={password} style={{borderColor: inputColor}} onFocus={() => setInputColor('grey')} onChange={(e) => setPassword(e.target.value)} required />
-                <Button className="basicButton" type="submit">Войти</Button>
+                <input className="basicInput" type="email" placeholder="Email" 
+                  value={email} style={{borderColor: inputColor}} 
+                  onFocus={() => setInputColor('grey')} 
+                  onChange={(e) => setEmail(e.target.value)} required />
+                  <div className="passwordInput">
+                    <input className="basicInput password" type={showPassword ? "text" : "password"} placeholder="Пароль" 
+                      value={password} style={{borderColor: inputColor}} 
+                      onFocus={() => setInputColor('grey')} 
+                      onChange={(e) => setPassword(e.target.value)} required />
+                      {!showPassword &&
+                      <Eye size={20} color='rgb(50, 50, 50)' className='passwordEye' 
+                      onClick={() => setShowPassword(true)} />}
+                      {showPassword &&
+                      <EyeSlash size={20} color='rgb(50, 50, 50)' className='passwordEye'
+                      onClick={() => setShowPassword(false)} />}
+                  </div>
+                <button className="basicButton" type="submit">Войти</button>
                 <Button variant='link' onClick={() => navigate('/register')}>Нет аккаунта? Зарегистрируйтесь</Button>
                 </div>
             </div>

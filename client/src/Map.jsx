@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, createSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
@@ -117,6 +117,9 @@ const MapPage = () => {
             setShowStory(true)
             setStoryShowed(story)
             setNewComment("")
+            setShowAuthor(false)
+            setShowMenu(false)
+            setShowSubscriptions(false)
             console.log(story)
             mymap?.flyTo({
                 center: [story.longitude, story.latitude],
@@ -146,36 +149,52 @@ const MapPage = () => {
             setStories(fetched)
             setFetchedInitialStory(true)
         }
-        setShowAuthor(false)
+        // setShowAuthor(false)
+        console.log("show author", fetched)
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
     }
 
     async function showAuthorPage (authorId) {
+        mymap?.flyTo({
+            center: lastCenter,
+            zoom: lastZoom,
+            speed: 1.3,
+            curve: 1
+        })
+        
         let fetched = await getStoriesByAuthorIdApi(authorId)
         setStories(fetched)
-        console.log(fetched)
+        console.log("page",fetched)
 
         setShowStory(false)
         setStoryShowed(null)
         setSelectedMarkerIndex(-1)
+        setShowMenu(false)
+        setShowSubscriptions(false)
         setShowAuthor(true)
+    }
 
-        mymap?.flyTo({
-            center: [37.61, 55.75],
-            zoom: 9,
-            speed: 1.3,
-            curve: 1
-        })
+    async function makeSubsShowed() {
+        setShowStory(false)
+        setStoryShowed(null)
+        setSelectedMarkerIndex(-1)
+        setShowMenu(false)
+        setShowAuthor(false)
+        setShowSubscriptions(true)
     }
 
     useEffect(() => {
         console.log('useeffect')
         console.log(author)
+        if (searchParams.has("subscriptions")) {
+            makeSubsShowed()
+            return
+        }
         if (searchParams.has("authorId")) {
-                    setShowStory(false)
-                    setStoryShowed(null)
-                    setShowAuthor(true)
+                    // setShowStory(false)
+                    // setStoryShowed(null)
+                    // setShowAuthor(true)
             let id = searchParams.get("authorId")
             if (id != author._id) {
                 if (searchParams.has("storyId")) {
@@ -204,8 +223,8 @@ const MapPage = () => {
             } else {
                 fetchData()
                 mymap?.flyTo({
-                    center: [37.61, 55.75],
-                    zoom: 9,
+                    center: lastCenter,
+                    zoom: lastZoom,
                     speed: 1.3,
                     curve: 1
                 })
@@ -264,6 +283,22 @@ const MapPage = () => {
         let story = updated.find(a => a.storyId == storyId)
         console.log("new", story)
         setStoryShowed(story)
+    }
+
+    async function subscribe(authorId) {
+        await subscribeApi(authorId)
+        let updated
+        if (searchParams.has("authorId")) {
+            updated = await getStoriesByAuthorIdApi(authorId)
+            setStories(updated)
+        } else {
+            updated = await fetchData()
+            setStories(updated)
+        }
+        if (searchParams.has("storyId")) {
+            let story = updated.find(a => a.storyId == storyShowed?.storyId)
+            setStoryShowed(story)
+        }
     }
 
     const formatDate = (dateStr) => {
@@ -529,12 +564,16 @@ const MapPage = () => {
                 </div>
                 <div className="storyAuthor" onClick={() => setSearchParams({"authorId": storyShowed?.authorId})}>
                     {storyShowed?.authorName}
+                    {!storyShowed.authoredByMe &&
                     <button className='followButton'>
-                        Подписаться
+                        {storyShowed?.subscribedByMe ? 'Отписаться' : 'Подписаться'}
                     </button>
+                    }
                 </div>
                 {new Array(...storyShowed?.storyImages).length > 0 &&
-                <Carousel className='storyImages' pause="hover">
+                <Carousel className='storyImages' pause="hover" 
+                controls={new Array(...storyShowed?.storyImages).length > 1} 
+                indicators={new Array(...storyShowed?.storyImages).length > 1} >
                     {storyShowed.storyImages.map((image, i) => {
                         return(
                             <Carousel.Item key={i}>
@@ -608,7 +647,7 @@ const MapPage = () => {
                 }} />
                     <div className="profilePageIcon">{stories[0]?.authorName[0]}</div>
                     {stories[0]?.authorName}
-                    <button className='followButton' onClick={() => subscribeApi(stories[0]?.authorId)}>
+                    <button className='followButton' onClick={() => subscribe(stories[0]?.authorId)}>
                         {new Array(...author.subscribersId).findIndex(id => id == stories[0]?.authorId) > -1 ?
                         'Отписаться' :'Подписаться'}
                     </button>
@@ -617,7 +656,13 @@ const MapPage = () => {
                 <div className="authorStoriesBlock">
                     {stories.map((story, i) => {
                         return(
-                            <div className="authorStory" key={i} onClick={() => makeStoryShow(stories, story.storyId)}>
+                            <div className="authorStory" key={i} onClick={() => {
+                                    setLastCenter(mymap.getCenter())
+                                    setLastZoom(mymap.getZoom())
+                                
+                                addSearchParam("storyId", story?.storyId)
+                                // makeStoryShow(stories, story.storyId)
+                            }}>
                                 <div className="authorStoryName">{story?.storyName}</div>
                                 <div className="authorStoryBody">
                                     {new Array(...story?.storyImages).length > 0 &&
@@ -635,24 +680,70 @@ const MapPage = () => {
                     })}
                 </div>}
             </div>}
+
+
+            {/* ПОДПИСКИ */}
+            {showSubscriptions &&
+            <div className="subsPage">
+            <div className="subsPageTitle">
+                Ваши подписки
+            </div>
+            {stories.length > 0 &&
+            <div className="subsBlock">
+                {stories.map((story, i) => {
+                    return(
+                        <div className="subscriptionsAuthor" key={i} onClick={() => {
+                            setSearchParams({"authorId": author._id})
+                        }}>
+                            <div className="subsAuthorTitle">
+                                <div className="subsAuthorNameBlock">
+                                    <div className="profilePageIcon">{stories[0]?.authorName[0]}</div>
+                                    <div className="subsAuthorName">{story?.storyName}</div>
+                                </div>
+                                <button className='followButton' onClick={() => subscribe(stories[0]?.authorId)}>
+                                    {new Array(...author.subscribersId).findIndex(id => id == stories[0]?.authorId) > -1 ?
+                                    'Отписаться' :'Подписаться'}
+                                </button>
+                            </div>
+                            <div className="subsBody">
+                                <div className="subsText">{story?.storyText}</div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>}
+        </div>}
         </div>
+
+
 
         <Offcanvas show={showMenu} onHide={() => setShowMenu(false)} placement='end'>
             <Offcanvas.Header closeButton>
                 <Offcanvas.Title>Меню</Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-                <div className="profileMenu">
+                <div className="profileMenu" onClick={() => {
+                    navigate({
+                        pathname: "profile",
+                        search: createSearchParams({
+                            "a": "bar"
+                        }).toString()
+                    })
+                }}>
                     <div className="profileMenuIcon">{author.name[0]}</div>
                     <div className="profileMenuName">{author.name}</div>
                 </div>
                 <div className="menuLinks">
                     <div className="menuLink">Главная страница</div>
                     <div className="menuLink" onClick={() => {
+                        setShowMenu(false)
                         setSearchParams({"authorId": author._id})
-                        showAuthorPage(null)
+                        // showAuthorPage(null)
                     }}>Мои истории</div>
-                    <div className="menuLink">Мои подписки</div>
+                    <div className="menuLink" onClick={() => {
+                        setShowMenu(false)
+                        setSearchParams({"subscriptions": true})
+                    }}>Мои подписки</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>
                     Выйти
