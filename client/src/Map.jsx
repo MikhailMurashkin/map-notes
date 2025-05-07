@@ -180,10 +180,19 @@ const MapPage = () => {
         //     curve: 1
         // })
 
-        let bbox = [[minLon, minLat], [maxLon, maxLat]];
-        mymap.fitBounds(bbox, {
-            padding: {top: 150, bottom: 150, left: 150, right: 150}
-        });
+        if(fetched.length == 1) {
+            mymap.flyTo({
+                center: [maxLon, maxLat],
+                zoom: 15,
+                speed: 1.5,
+                curve: 1
+            })
+        } else {
+            let bbox = [[minLon, minLat], [maxLon, maxLat]];
+            mymap.fitBounds(bbox, {
+                padding: {top: 150, bottom: 150, left: 150, right: 150}
+            })
+        }
 
         
 

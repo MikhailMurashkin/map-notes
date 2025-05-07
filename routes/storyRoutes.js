@@ -49,8 +49,8 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
 
           story.authoredByMe = story.authorId == req.author
 
-          let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
-          story.subscribedByMe = mySubscribers.indexOf(story.authorId) == -1 ? false : true
+          let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == story.authorId)].subscribersId
+          story.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
 
           story.likedByMe = story.likedAuthorsId.indexOf(req.author) == -1 ? false : true
           story.dislikedByMe = story.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
@@ -108,8 +108,9 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
             delete authorStory.likedAuthorsId
             delete authorStory.dislikedAuthorsId
 
-            let mySubscribers = authors[authors.findIndex(a => a.id == req.author)].subscribersId
-            authorStory.subscribedByMe = mySubscribers.indexOf(authorStory.authorId) == -1 ? false : true
+            
+            let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == authorStory.authorId)].subscribersId
+            authorStory.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
 
             let authorStoryComments = []
   
@@ -129,7 +130,16 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
             authorStoriesExtended.push(authorStory)
         })
 
-        res.json(authorStoriesExtended)
+        
+        let authorSubscribers = author.subscribersId
+        let subscribedByMe = authorSubscribers.indexOf(req.author) == -1 ? false : true
+
+        res.json({
+          authorName: author.name,
+          authorId: author._id,
+          subscribedByMe,
+          stories: authorStoriesExtended
+        })
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Server error' })
@@ -189,14 +199,14 @@ storyRoutes.post('/dislikeStory', protect, async (req, res) => {
 storyRoutes.post('/subscribeAuthor', protect, async (req, res) => {
   try {
       const { authorId } = req.body
-      let author = await Author.findById({ authorId })
+      let author = await Author.findById(authorId)
 
       if (author.subscribersId.indexOf(req.author) < 0) {
-        await Author.findByIdAndUpdate({ authorId }, {
+        await Author.findByIdAndUpdate(authorId, {
           $push: {subscribersId: req.author}
         })
       } else {
-        await Author.findByIdAndUpdate({ authorId }, {
+        await Author.findByIdAndUpdate(authorId, {
           $pull: {subscribersId: req.author}
         })
       }
@@ -229,6 +239,10 @@ storyRoutes.post('/comment', protect, async (req, res) => {
       console.log(error)
       res.status(500).json({ message: 'Server error' })
   }
+})
+
+storyRoutes.get('/getStories', protect, async (req, res) => {
+
 })
 
 
