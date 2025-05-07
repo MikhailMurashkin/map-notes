@@ -26,7 +26,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
-mongoose.connect("mongodb+srv://michaelismur:admin@horsehelper.g1dwcs9.mongodb.net/?retryWrites=true&w=majority&appName=horsehelper" || process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URI, {
     family: 4
 })
 .then(() => console.log('MongoDB connected'))
