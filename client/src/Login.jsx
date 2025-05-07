@@ -38,7 +38,7 @@ const Login = () => {
     return (
         <form onSubmit={handleSubmit}>
             <div className="loginForm">
-              <img src='../public/background.jpg' className='backgroundImg' />
+              <img src='../background.jpg' className='backgroundImg' />
                 <div className="title">Вход в аккаунт</div>
                 <div className="inputs">
                 <input className="basicInput" type="email" placeholder="Email" 

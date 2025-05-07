@@ -57,7 +57,10 @@ const MapPage = () => {
 
     const [showMenu, setShowMenu] = useState(false)
     const [showAuthor, setShowAuthor] = useState(false)
+    const [authorShowed, setAuthorShowed] = useState(null)
+
     const [showSubscriptions, setShowSubscriptions] = useState(false)
+    const [subscriptions, setSubscriptions] = useState([])
 
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
@@ -74,17 +77,26 @@ const MapPage = () => {
     }
 
     async function fetchAuthorStories (authorId) {
-        let storiesFetched = await getStoriesByAuthorIdApi(authorId)
+        let dataFetched = await getStoriesByAuthorIdApi(authorId)
+        let storiesFetched = dataFetched.stories
         let arr = new Array(...storiesFetched)
         arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0))
         console.log("arr",arr)
-        setStories(arr)
-        return storiesFetched
+        setStories(storiesFetched)
+        setAuthorShowed(dataFetched)
+        return dataFetched
     }
 
     function addSearchParam (tag, value) {
         setSearchParams((searchParams) => {
             searchParams.append(tag, value)
+            return searchParams
+        })
+    }
+
+    function addOrUpdateSearchParam (tag, value) {
+        setSearchParams((searchParams) => {
+            searchParams.set(tag, value)
             return searchParams
         })
     }
@@ -111,15 +123,17 @@ const MapPage = () => {
     function makeStoryShow(allStories, storyId) {
         let arr = new Array(...allStories)
         let index = arr.findIndex(a => a.storyId == storyId)
+        console.log("got id " + storyId+", got index " + index)
         if (index > -1) {
             let story = arr[index]
             setSelectedMarkerIndex(index)
-            setShowStory(true)
             setStoryShowed(story)
             setNewComment("")
             setShowAuthor(false)
+            setAuthorShowed(null)
             setShowMenu(false)
             setShowSubscriptions(false)
+            setShowStory(true)
             console.log(story)
             mymap?.flyTo({
                 center: [story.longitude, story.latitude],
@@ -134,19 +148,17 @@ const MapPage = () => {
         let fetched = stories
         if (!fetchedInitialStory) {
             fetched = await fetchData()
-            setStories(fetched)
             setFetchedInitialStory(true)
         }
-        setShowAuthor(false)
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
     }
 
     async function showAuthorStory (authorId, storyId) {
         let fetched = stories
-        if (!fetchedInitialStory) {
-            fetched = await getStoriesByAuthorIdApi(authorId)
-            setStories(fetched)
+        if (!fetchedInitialStory || !authorShowed || authorShowed.authorId != authorId) {
+            let fetchedData = await fetchAuthorStories(authorId)
+            fetched = fetchedData.stories
             setFetchedInitialStory(true)
         }
         // setShowAuthor(false)
@@ -157,15 +169,15 @@ const MapPage = () => {
 
     async function showAuthorPage (authorId) {
         
-        let fetched = await getStoriesByAuthorIdApi(authorId)
-        setStories(fetched)
-        console.log("page",fetched)
+        let fetched = await fetchAuthorStories(authorId)
+        console.log("author",fetched)
+        let storiesFetched = fetched.stories
 
         let maxLon = 0
         let minLon = 180
         let maxLat = -90
         let minLat = 90
-        fetched.forEach(fetchedStory => {
+        storiesFetched.forEach(fetchedStory => {
             maxLon = fetchedStory.longitude > maxLon ? fetchedStory.longitude : maxLon
             minLon = fetchedStory.longitude < minLon ? fetchedStory.longitude : minLon
             maxLat = fetchedStory.latitude > maxLat ? fetchedStory.latitude : maxLat
@@ -180,7 +192,7 @@ const MapPage = () => {
         //     curve: 1
         // })
 
-        if(fetched.length == 1) {
+        if(storiesFetched.length == 1) {
             mymap.flyTo({
                 center: [maxLon, maxLat],
                 zoom: 15,
@@ -210,7 +222,25 @@ const MapPage = () => {
         setSelectedMarkerIndex(-1)
         setShowMenu(false)
         setShowAuthor(false)
+        setAuthorShowed(null)
         setShowSubscriptions(true)
+    }
+
+    async function showMain() {
+        await fetchData()
+        setShowStory(false)
+        setStoryShowed(null)
+        setSelectedMarkerIndex(-1)
+        setShowMenu(false)
+        setShowAuthor(false)
+        setAuthorShowed(null)
+        setShowSubscriptions(false)
+        mymap.flyTo({
+            center: lastCenter,
+            zoom: lastZoom,
+            speed: 1.5,
+            curve: 1
+        })
     }
 
     useEffect(() => {
@@ -250,13 +280,7 @@ const MapPage = () => {
                 let id = searchParams.get("storyId")
                 fetchAndSetStory(id)
             } else {
-                fetchData()
-                mymap?.flyTo({
-                    center: lastCenter,
-                    zoom: lastZoom,
-                    speed: 1.5,
-                    curve: 1
-                })
+                showMain()
             }
         }
     }, [searchParams])
@@ -274,10 +298,12 @@ const MapPage = () => {
         setNewStoryText('')
         setNewStoryImages([])
 
+        let id = newStories[newStories.length - 1].storyId
+        setSearchParams({"storyId": id})
         
-        setShowStory(true)
-        setSelectedMarkerIndex(newStories.length - 1)
-        setStoryShowed(newStories[newStories.length - 1])
+        // setShowStory(true)
+        // setSelectedMarkerIndex(newStories.length - 1)
+        // setStoryShowed(newStories[newStories.length - 1])
         
     }
 
@@ -293,14 +319,14 @@ const MapPage = () => {
 
     async function likeAndUpdate (storyId) {
         await likeStoryApi(storyId)
-        let updated = await fetchData()
+        let updated = await getStoriesApi()
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
     }
 
     async function dislikeAndUpdate (storyId) {
         await dislikeStoryApi(storyId)
-        let updated = await fetchData()
+        let updated = await getStoriesApi()
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
     }
@@ -308,7 +334,7 @@ const MapPage = () => {
     async function sendComment (storyId) {
         await commentApi(storyId, newComment)
         setNewComment("")
-        let updated = await fetchData()
+        let updated = await getStoriesApi()
         let story = updated.find(a => a.storyId == storyId)
         console.log("new", story)
         setStoryShowed(story)
@@ -318,11 +344,10 @@ const MapPage = () => {
         await subscribeApi(authorId)
         let updated
         if (searchParams.has("authorId")) {
-            updated = await getStoriesByAuthorIdApi(authorId)
-            setStories(updated)
+            updated = await fetchAuthorStories(authorId)
+            updated = updated.stories
         } else {
             updated = await fetchData()
-            setStories(updated)
         }
         if (searchParams.has("storyId")) {
             let story = updated.find(a => a.storyId == storyShowed?.storyId)
@@ -444,7 +469,7 @@ const MapPage = () => {
 
                                 setShowStory(true)
                                 setStoryShowed(story)
-                                addSearchParam("storyId", story.storyId)
+                                addOrUpdateSearchParam("storyId", story.storyId)
                                 console.log(story)
                                 console.log("marker click")
                             }}
@@ -591,10 +616,13 @@ const MapPage = () => {
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>
-                <div className="storyAuthor" onClick={() => setSearchParams({"authorId": storyShowed?.authorId})}>
+                <div className="storyAuthor">
+                    <div style={{cursor: 'pointer'}} 
+                    onClick={() => setSearchParams({"authorId": storyShowed?.authorId})}>
                     {storyShowed?.authorName}
+                    </div>
                     {!storyShowed.authoredByMe &&
-                    <button className='followButton'>
+                    <button className='followButton' onClick={() => subscribe(storyShowed?.authorId)}>
                         {storyShowed?.subscribedByMe ? 'Отписаться' : 'Подписаться'}
                     </button>
                     }
@@ -674,22 +702,22 @@ const MapPage = () => {
                     goBack()
                     // deleteSearchParamsTagValue("authorId", auth)
                 }} />
-                    <div className="profilePageIcon">{stories[0]?.authorName[0]}</div>
-                    {stories[0]?.authorName}
-                    <button className='followButton' onClick={() => subscribe(stories[0]?.authorId)}>
-                        {new Array(...author.subscribersId).findIndex(id => id == stories[0]?.authorId) > -1 ?
-                        'Отписаться' :'Подписаться'}
-                    </button>
+                    <div className="profilePageIcon">{authorShowed?.authorName[0]}</div>
+                    {authorShowed?.authorName}
+                    {authorShowed?.authorId != author._id &&
+                    <button className='followButton' onClick={() => subscribe(authorShowed?.authorId)}>
+                        {authorShowed?.subscribedByMe ? 'Отписаться' :'Подписаться'}
+                    </button>}
                 </div>
                 {stories.length > 0 &&
                 <div className="authorStoriesBlock">
-                    {stories.map((story, i) => {
+                    {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
                         return(
                             <div className="authorStory" key={i} onClick={() => {
                                     setLastCenter(mymap.getCenter())
                                     setLastZoom(mymap.getZoom())
                                 
-                                addSearchParam("storyId", story?.storyId)
+                                addOrUpdateSearchParam("storyId", story?.storyId)
                                 // makeStoryShow(stories, story.storyId)
                             }}>
                                 <div className="authorStoryName">{story?.storyName}</div>
@@ -717,6 +745,9 @@ const MapPage = () => {
             <div className="subsPageTitle">
                 Ваши подписки
             </div>
+            {subscriptions.length < 1 &&
+            <div className="subsEmpty">Вы еще не подписаны на других авторов</div>
+            }
             {stories.length > 0 &&
             <div className="subsBlock">
                 {stories.map((story, i) => {
@@ -752,18 +783,17 @@ const MapPage = () => {
             </Offcanvas.Header>
             <Offcanvas.Body>
                 <div className="profileMenu" onClick={() => {
-                    navigate({
-                        pathname: "profile",
-                        search: createSearchParams({
-                            "a": "bar"
-                        }).toString()
-                    })
+                    navigate("profile")
                 }}>
                     <div className="profileMenuIcon">{author.name[0]}</div>
                     <div className="profileMenuName">{author.name}</div>
                 </div>
                 <div className="menuLinks">
-                    <div className="menuLink">Главная страница</div>
+                    <div className="menuLink" onClick={() => {
+                        setShowMenu(false)
+                        setSearchParams()}}>
+                        Главная страница
+                    </div>
                     <div className="menuLink" onClick={() => {
                         setShowMenu(false)
                         setSearchParams({"authorId": author._id})

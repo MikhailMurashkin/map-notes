@@ -38,7 +38,7 @@ const Register = () => {
     return (
         <form onSubmit={handleSubmit}>
             <div className="loginForm">
-              <img src='../public/background.jpg' className='backgroundImg' />
+              <img src='../background.jpg' className='backgroundImg' />
                 <div className="title">Регистрация</div>
                 <div className="inputs">
                 <input className="basicInput" type="text" 
