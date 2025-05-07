@@ -124,7 +124,7 @@ const MapPage = () => {
             mymap?.flyTo({
                 center: [story.longitude, story.latitude],
                 zoom: 15,
-                speed: 1.3,
+                speed: 1.5,
                 curve: 1
             })
         }
@@ -156,16 +156,36 @@ const MapPage = () => {
     }
 
     async function showAuthorPage (authorId) {
-        mymap?.flyTo({
-            center: lastCenter,
-            zoom: lastZoom,
-            speed: 1.3,
-            curve: 1
-        })
         
         let fetched = await getStoriesByAuthorIdApi(authorId)
         setStories(fetched)
         console.log("page",fetched)
+
+        let maxLon = 0
+        let minLon = 180
+        let maxLat = -90
+        let minLat = 90
+        fetched.forEach(fetchedStory => {
+            maxLon = fetchedStory.longitude > maxLon ? fetchedStory.longitude : maxLon
+            minLon = fetchedStory.longitude < minLon ? fetchedStory.longitude : minLon
+            maxLat = fetchedStory.latitude > maxLat ? fetchedStory.latitude : maxLat
+            minLat = fetchedStory.latitude < minLat ? fetchedStory.latitude : minLat
+        })
+
+        console.log(maxLon, minLon)
+        // mymap?.flyTo({
+        //     center: [(maxLon + minLon) / 2, (maxLat + minLat) / 2],
+        //     zoom: 5,
+        //     speed: 1.5,
+        //     curve: 1
+        // })
+
+        let bbox = [[minLon, minLat], [maxLon, maxLat]];
+        mymap.fitBounds(bbox, {
+            padding: {top: 150, bottom: 150, left: 150, right: 150}
+        });
+
+        
 
         setShowStory(false)
         setStoryShowed(null)
@@ -225,7 +245,7 @@ const MapPage = () => {
                 mymap?.flyTo({
                     center: lastCenter,
                     zoom: lastZoom,
-                    speed: 1.3,
+                    speed: 1.5,
                     curve: 1
                 })
             }
@@ -406,7 +426,7 @@ const MapPage = () => {
                                 mymap.flyTo({
                                     center: [story.longitude, story.latitude],
                                     zoom: 15,
-                                    speed: 1.3,
+                                    speed: 1.5,
                                     curve: 1
                                 })
                                 setZoomed(false)
@@ -518,7 +538,7 @@ const MapPage = () => {
                             mymap.flyTo({
                                 center: lastCenter,
                                 zoom: lastZoom,
-                                speed: 1.3,
+                                speed: 1.5,
                                 curve: 1
                             })
                         }}>
