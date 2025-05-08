@@ -290,6 +290,19 @@ storyRoutes.get('/getSubscribedAuthorsStories', protect, async (req, res) => {
           delete authorStory.likedAuthorsId
           delete authorStory.dislikedAuthorsId
 
+          let storyComments = []
+
+          comments.forEach(comment => {
+            if (comment.storyId == authorStory.storyId) {
+              comment = comment._doc
+              let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+              comment.authorName = authors[commentAuthorI].name
+              storyComments.push(comment)
+            }
+          })
+
+          authorStory.comments = storyComments.reverse()
+
           
           let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == authorStory.authorId)].subscribersId
           authorStory.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true

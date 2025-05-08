@@ -229,13 +229,13 @@ button:hover {
   background-color: white;
 }
 
-.authorStoryImage {
+.authorStoryImage, .subsStoryImage {
   position: relative;
   height: 140px;
   width: 140px;
 }
 
-.authorStoryImg {
+.authorStoryImg, .subsStoryImg {
   object-fit: cover;
   height: 140px;
   width: 140px;
@@ -245,7 +245,7 @@ button:hover {
   left: 0;
 }
 
-.authorStoryImgOverlay {
+.authorStoryImgOverlay, .subsStoryImgOverlay {
   height: 140px;
   width: 140px;
   border-radius: 10px;
@@ -265,7 +265,7 @@ button:hover {
   position: relative;
 }
 
-.authorStoriesBlock {
+.authorStoriesBlock, .subsStoriesBlock {
   display: flex;
   flex-direction: column;
   row-gap: 8px;
@@ -285,7 +285,7 @@ button:hover {
 }
 
 
-.authorStoryBody {
+.authorStoryBody, .subsStoryBody {
   display: flex;
   flex-direction: row;
   column-gap: 20px;
@@ -298,7 +298,7 @@ button:hover {
   padding-top: 10px;
 }
 
-.authorStoryText {
+.authorStoryText, .subsStoryText {
   width: 280px;
   height: fit-content;
   max-height: 140px;
@@ -419,39 +419,6 @@ button:hover {
   row-gap: 10px;
 }
 
-.subscriptionsAuthor {
-  /* background-color: aqua; */
-  display: flex;
-  flex-direction: column;
-  padding: 10px 8px;
-  cursor: pointer;
-}
-
-.subscriptionsAuthor:hover {
-  box-shadow: 0px 10px 5px -5px rgba(0, 0, 0, 0.5);
-  transition-duration: 0.2s;
-}
-
-.subsAuthorTitle {
-  display: flex;
-  flex-direction: row;
-  column-gap: 6px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.subsAuthorName {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.subsAuthorNameBlock {
-  display: flex;
-  flex-direction: row;
-  column-gap: 8px;
-  align-items: center;
-}
-
 .loginForm {
   display: flex;
   flex-direction: column;
@@ -547,10 +514,18 @@ button:hover {
   color: rgb(50, 50, 50);
 }
 
+.profileDescriptionTitle {
+  font-size: 20px;
+  display: flex;
+  flex-direction: row;
+  column-gap: 6px;
+  align-items: center;
+}
+
 .profileButtons {
   display: flex;
   flex-direction: row;
-  padding-top: 20px;
+  padding-top: 40px;
   padding-bottom: 40px;
   column-gap: 12px;
   flex-wrap: wrap;
@@ -571,4 +546,49 @@ button:hover {
 .subsEmpty {
   font-style: oblique;
   padding: 0px 20px;
+}
+
+.subsStory {
+  padding: 6px 20px;
+  box-shadow: 0px 10px 15px -5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.subsStory:hover {
+  box-shadow: 0px 15px 10px -5px rgba(0, 0, 0, 0.5);
+  transition-duration: 0.2s;
+}
+
+.subsStoryName {
+  font-size: 20px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.subsAuthorName {
+  font-style: oblique;
+  padding-bottom: 12px;
+}
+
+.mapInformer {
+  position: absolute;
+  top: 4px;
+  left: 0; 
+  right: 0; 
+  margin-inline: auto; 
+  width: fit-content;
+  max-width: 80%;
+  z-index: 1;
+  background-color: white;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  column-gap: 4px;
+  align-items: center;
+}
+
+.close:hover {
+  color: red;
 }

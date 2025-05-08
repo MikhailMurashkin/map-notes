@@ -14,9 +14,9 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
     Popup, Marker, useMap
 } from 'react-map-gl/maplibre'
 
-import { Button, Form, Image, Carousel, Offcanvas,  ListGroup } from 'react-bootstrap';
+import { Button, Form, Image, Carousel, Offcanvas,  CloseButton } from 'react-bootstrap';
 import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, 
-    HandThumbsUpFill, ArrowUpCircleFill } from 'react-bootstrap-icons'
+    HandThumbsUpFill, ArrowUpCircleFill, XLg } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
 import Comments from './Comments'
@@ -147,10 +147,9 @@ const MapPage = () => {
 
     async function fetchAndSetStory (storyId) {
         let fetched = stories
-        if (!fetchedInitialStory) {
             fetched = await fetchData()
-            setFetchedInitialStory(true)
-        }
+            // setFetchedInitialStory(true)
+        
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
     }
@@ -217,14 +216,28 @@ const MapPage = () => {
         setShowAuthor(true)
     }
 
+    async function fetchSubs() {
+        let fetched = await getSubscribedAuthorsStoriesApi()
+        setStories(fetched.stories)
+        return fetched
+    }
+
     async function makeSubsShowed() {
-        setShowStory(false)
-        setStoryShowed(null)
-        setSelectedMarkerIndex(-1)
-        setShowMenu(false)
-        setShowAuthor(false)
-        setAuthorShowed(null)
-        setShowSubscriptions(true)
+        let fetched = await fetchSubs()
+        console.log(fetched)
+        if (searchParams.has("storyId")) {
+            let idStory = searchParams.get("storyId")
+            makeStoryShow(fetched.stories, idStory)
+        }
+        else {
+            setShowStory(false)
+            setStoryShowed(null)
+            setSelectedMarkerIndex(-1)
+            setShowMenu(false)
+            setShowAuthor(false)
+            setAuthorShowed(null)
+            setShowSubscriptions(true)
+        }
     }
 
     async function showMain() {
@@ -236,12 +249,14 @@ const MapPage = () => {
         setShowAuthor(false)
         setAuthorShowed(null)
         setShowSubscriptions(false)
-        mymap.flyTo({
-            center: lastCenter,
-            zoom: lastZoom,
-            speed: 1.5,
-            curve: 1
-        })
+        if (!placeNewMarker) {
+            mymap.flyTo({
+                center: lastCenter,
+                zoom: lastZoom,
+                speed: 1.5,
+                curve: 1
+            })
+        }
     }
 
     useEffect(() => {
@@ -320,14 +335,34 @@ const MapPage = () => {
 
     async function likeAndUpdate (storyId) {
         await likeStoryApi(storyId)
-        let updated = await getStoriesApi()
+        let updated
+        if (searchParams.has("subscriptions")) {
+            updated = fetchSubs()
+            updated = updated.stories
+        } else if (searchParams.has("authorId")) {
+            let id = searchParams.get("authorId")
+            updated = await fetchAuthorStories(id)
+            updated = updated.stories
+        } else {
+            updated = await fetchData()
+        }
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
     }
 
     async function dislikeAndUpdate (storyId) {
         await dislikeStoryApi(storyId)
-        let updated = await getStoriesApi()
+        let updated
+        if (searchParams.has("subscriptions")) {
+            updated = fetchSubs()
+            updated = updated.stories
+        } else if (searchParams.has("authorId")) {
+            let id = searchParams.get("authorId")
+            updated = await fetchAuthorStories(id)
+            updated = updated.stories
+        } else {
+            updated = await fetchData()
+        }
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
     }
@@ -335,7 +370,17 @@ const MapPage = () => {
     async function sendComment (storyId) {
         await commentApi(storyId, newComment)
         setNewComment("")
-        let updated = await getStoriesApi()
+        let updated
+        if (searchParams.has("subscriptions")) {
+            updated = fetchSubs()
+            updated = updated.stories
+        } else if (searchParams.has("authorId")) {
+            let id = searchParams.get("authorId")
+            updated = await fetchAuthorStories(id)
+            updated = updated.stories
+        } else {
+            updated = await fetchData()
+        }
         let story = updated.find(a => a.storyId == storyId)
         console.log("new", story)
         setStoryShowed(story)
@@ -344,7 +389,13 @@ const MapPage = () => {
     async function subscribe(authorId) {
         await subscribeApi(authorId)
         let updated
-        if (searchParams.has("authorId")) {
+        if (searchParams.has("subscriptions")) {
+            updated = fetchSubs()
+            updated = updated.stories
+            if (searchParams.has("storyId")) {
+                setSearchParams({"subscriptions": true})
+            }
+        } else if (searchParams.has("authorId")) {
             updated = await fetchAuthorStories(authorId)
             updated = updated.stories
         } else {
@@ -371,7 +422,12 @@ const MapPage = () => {
 
     return (
         <div style={{display: 'flex'}}>
-        <div style={{flex: 'auto'}}>
+        <div style={{flex: 'auto', position: 'relative'}}>
+            <div className="mapInformer">
+                Вы просматриваете истории автора
+                {/* <XLg size={14} className='close'/> */}
+                <CloseButton  />
+            </div>
             <Map
             id='mymap'
             initialViewState={{
@@ -530,6 +586,7 @@ const MapPage = () => {
                         setPlaceNewMarker(false)
                     } else {
                         setPlaceNewMarker(true)
+                        setSearchParams()
                     }
                 }}>
                     {placeNewMarker ? 'Отменить' : 'Создать историю'}
@@ -744,35 +801,44 @@ const MapPage = () => {
             {showSubscriptions &&
             <div className="subsPage">
             <div className="subsPageTitle">
-                Ваши подписки
+                Ваша лента
             </div>
-            {subscriptions.length < 1 &&
-            <div className="subsEmpty">Вы еще не подписаны на других авторов</div>
+            {stories.length < 1 &&
+            <div className="subsEmpty">
+                Авторы, на которых вы подписаны, еще не опубликовали свои истории
+            </div>
             }
             {stories.length > 0 &&
-            <div className="subsBlock">
-                {stories.map((story, i) => {
-                    return(
-                        <div className="subscriptionsAuthor" key={i} onClick={() => {
-                            setSearchParams({"authorId": author._id})
-                        }}>
-                            <div className="subsAuthorTitle">
-                                <div className="subsAuthorNameBlock">
-                                    <div className="profilePageIcon">{stories[0]?.authorName[0]}</div>
-                                    <div className="subsAuthorName">{story?.storyName}</div>
+                <div className="subsStoriesBlock">
+                    {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
+                        return(
+                            <div className="subsStory" key={i} onClick={() => {
+                                setLastCenter(mymap.getCenter())
+                                setLastZoom(mymap.getZoom())
+                                
+                                addOrUpdateSearchParam("storyId", story?.storyId)
+                            }}>
+                                <div className="subsStoryName">
+                                    {story?.storyName}
                                 </div>
-                                <button className='followButton' onClick={() => subscribe(stories[0]?.authorId)}>
-                                    {new Array(...author.subscribersId).findIndex(id => id == stories[0]?.authorId) > -1 ?
-                                    'Отписаться' :'Подписаться'}
-                                </button>
+                                <div className="subsAuthorName">
+                                    Опубликовано автором {story?.authorName}
+                                </div>
+                                <div className="subsStoryBody">
+                                    {new Array(...story?.storyImages).length > 0 &&
+                                    <div className="subsStoryImage">
+                                        <img src={story.storyImages[0]} className='subsStoryImg' />
+                                        {new Array(...story?.storyImages).length > 1 &&
+                                        <div className="subsStoryImgOverlay">+{new Array(...story?.storyImages).length - 1}</div>
+                                        }
+                                    </div>
+                                    }
+                                    <div className="subsStoryText">{story?.storyText}</div>
+                                </div>
                             </div>
-                            <div className="subsBody">
-                                <div className="subsText">{story?.storyText}</div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>}
+                        )
+                    })}
+                </div>}
         </div>}
         </div>
 
@@ -803,8 +869,7 @@ const MapPage = () => {
                     <div className="menuLink" onClick={() => {
                         setShowMenu(false)
                         setSearchParams({"subscriptions": true})
-                        getSubscribedAuthorsStoriesApi()
-                    }}>Мои подписки</div>
+                    }}>Моя лента</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>
                     Выйти

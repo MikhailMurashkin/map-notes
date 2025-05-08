@@ -3,36 +3,58 @@ import { useNavigate, useSearchParams, createSearchParams } from 'react-router-d
 import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from './modules/AuthContext'
 import {
-    getMyProfileInfoApi
+    getMyProfileInfoApi, updateProfileDescriptionApi
 } from './modules/Api'
 
-import Button from 'react-bootstrap/Button'
-import { BoxArrowRight, House, Journals, PeopleFill } from 'react-bootstrap-icons'
+import { Modal, Form, Button } from 'react-bootstrap'
+import { BoxArrowRight, House, Journals, PeopleFill, PersonPlusFill,
+            PencilSquare } from 'react-bootstrap-icons'
 
 const Profile = () => {
     const { login, author, logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const [data, setData] = useState(null)
+    const [newDescription, setNewDescription] = useState('')
+    const [showModal, setShowModal] = useState(false)
     
-    async function getProfileData() {}
+    async function getProfileData() {
+        let fetched = await getMyProfileInfoApi()
+        setData(fetched)
+        console.log(fetched)
+    }
   
     useEffect(() => {
-        getMyProfileInfoApi()
+        getProfileData()
     }, [])
+
+    async function updateDescription () {
+        await updateProfileDescriptionApi(newDescription)
+        await getProfileData()
+        console.log('updated!!!')
+        setShowModal(false)
+    }
   
     return (
         <div className="profile">
             <div className="profileIcon">
-                {!data ? author.name[0] : '' }
+                {!data?.image || data.image.length < 1 ? author.name[0] : '' }
             </div>
             <div className="profileName">{author.name}</div>
-            <div className="profileDescription">О себе:</div>
-            <div className="profileButtons">
-                <div className="profileButton" onClick={() => navigate('/')}>
-                    <House size={24} />
-                    На главную страницу
+            <div className="profileDescription">
+                <div className="profileDescriptionTitle">
+                    О себе:
+                    <PencilSquare size={19} color='rgb(117,117,117)' style={{cursor: 'pointer'}}
+                    onClick={() => {
+                        setNewDescription(data.description)
+                        setShowModal(true)
+                    }} />
                 </div>
+                {(data?.description && data.description.length > 0) ? 
+                data.description : 'Описания еще нет'}
+            </div>
+    
+            <div className="profileButtons">
                 <div className="profileButton" onClick={() => {
                     navigate({
                         pathname: "/",
@@ -42,7 +64,7 @@ const Profile = () => {
                     })
                 }}>
                     <Journals size={24} />
-                    историй опубликовано
+                    {data?.stories.length} историй опубликовано
                 </div>
                 <div className="profileButton" onClick={() => {
                     navigate({
@@ -52,14 +74,47 @@ const Profile = () => {
                         }).toString()
                     })
                 }}>
+                    <PersonPlusFill size={24} />
+                    {data?.subscriptions.length} подписок
+                </div>
+                <div className="profileButton" style={{cursor: 'initial'}}>
                     <PeopleFill size={24} />
-                    подписок
+                    {data?.subscribers.length} подписчиков
                 </div>
             </div>
+            <div className="profileButton" style={{paddingBottom: '60px'}} 
+            onClick={() => navigate('/')}>
+                    <House size={24} />
+                    На главную страницу
+            </div>
+
             <div className="logoutButton" onClick={logout}>
                 Выйти
                 <BoxArrowRight size={18} color='#d00' />
             </div>
+
+            <Modal size="lg" show={showModal} onHide={() => setShowModal(false)} centered>
+                <Modal.Header closeButton>
+                <Modal.Title>Редактирование описания</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                <Form>
+                    <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Введите новое описание</Form.Label>
+                    <Form.Control as="textarea" rows={3} value={newDescription} 
+                    onChange={e => setNewDescription(e.target.value)} />
+                    </Form.Group>
+                </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowModal(false)}>
+                    Отмена
+                </Button>
+                <button onClick={() => updateDescription()}>
+                    Сохранить изменения
+                </button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
   };
