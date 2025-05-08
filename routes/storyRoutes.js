@@ -33,6 +33,24 @@ storyRoutes.post('/createStory', protect, async (req, res) => {
     }
 })
 
+storyRoutes.post('/deleteStory', protect, async (req, res) => {
+    try {
+        const { storyId } = req.body
+        let story = await Story.findOne({ storyId })
+
+        if (story.authorId != req.author) {
+          res.status(401).json({ message: 'Not allowed' })
+        }
+
+        await Story.deleteOne({ storyId })
+
+        res.status(201).json({ message: 'Story deleted' })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error' })
+    }
+})
+
 storyRoutes.get('/getStories', protect, async (req, res) => {
   try {
       let stories = await Story.find({ })
@@ -138,15 +156,17 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
           authorName: author.name,
           authorId: author._id,
           subscribedByMe,
-          stories: authorStoriesExtended
+          subscribersAmmount: author.subscribersId.length,
+          description: author.description,
+          authorImage: author.image,
+          stories: authorStoriesExtended,
+          image: author.image
         })
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Server error' })
     }
 })
-
-
 
 storyRoutes.post('/likeStory', protect, async (req, res) => {
   try {
@@ -241,11 +261,95 @@ storyRoutes.post('/comment', protect, async (req, res) => {
   }
 })
 
-storyRoutes.get('/getStories', protect, async (req, res) => {
+storyRoutes.get('/getSubscribedAuthorsStories', protect, async (req, res) => {
+  try {
+      let subscriptions = await Author.find({ subscribersId: req.author })
+      let subsriptionsIds = []
+      subscriptions.forEach(sub => {
+        subsriptionsIds.push(sub._id)
+      })
+      let authorsStories = await Story.find({ authorId: { $in: subsriptionsIds } })
+      let comments = await Comment.find({ })
+      let authors = await Author.find({ })
 
+      let authorsStoriesExtended = []
+      authorsStories.forEach(authorStory => {
+          authorStory = authorStory._doc
+
+          let author = subscriptions[subscriptions.findIndex(s => s.id == authorStory.authorId)]
+          authorStory.authorName = author.name
+
+          authorStory.authoredByMe = authorStory.authorId == req.author
+
+          authorStory.likedByMe = authorStory.likedAuthorsId.indexOf(req.author) == -1 ? false : true
+          authorStory.dislikedByMe = authorStory.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
+
+            
+          authorStory.ammountOfLikes = authorStory.likedAuthorsId.length
+          authorStory.ammountOfDislikes = authorStory.dislikedAuthorsId.length
+          delete authorStory.likedAuthorsId
+          delete authorStory.dislikedAuthorsId
+
+          
+          let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == authorStory.authorId)].subscribersId
+          authorStory.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
+
+          authorsStoriesExtended.push(authorStory)
+      })
+
+      res.json({
+        stories: authorsStoriesExtended
+      })
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+  }
+})
+
+storyRoutes.get('/getMyProfileInfo', protect, async (req, res) => {
+  try {
+    let author = await Author.findById(req.author)
+
+    let stories = await Story.find({ authorId: req.author })
+    let storiesIds = []
+    stories.forEach(story => {
+      storiesIds.push(story.storyId)
+    })
+
+    let subscriptions = await Author.find({ subscribersId: req.author })
+    let subsriptionsIds = []
+    subscriptions.forEach(sub => {
+      subsriptionsIds.push(sub._id)
+    })
+    
+    res.json({
+      name: author.name,
+      image: author.image,
+      description: author.description,
+      subscriptions: subsriptionsIds,
+      subscribers: author.subscribersId,
+      stories: storiesIds
+    })
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+  }
 })
 
 
+storyRoutes.post('/updateProfileDescription', protect, async (req, res) => {
+  try {
+      const { description } = req.body
+      let author = await Author.findByIdAndUpdate( req.author, {
+        description
+      })
+
+      res.status(201).json({ message: 'Profile description updated' })
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+  }
+})
 
 
 

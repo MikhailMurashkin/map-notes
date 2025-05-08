@@ -1,9 +1,12 @@
-import React from 'react';
-import { useNavigate, useSearchParams, createSearchParams } from 'react-router-dom';
-import { useState, useContext, useEffect } from 'react';
-import { AuthContext } from './modules/AuthContext';
+import React from 'react'
+import { useNavigate, useSearchParams, createSearchParams } from 'react-router-dom'
+import { useState, useContext, useEffect } from 'react'
+import { AuthContext } from './modules/AuthContext'
+import {
+    getMyProfileInfoApi
+} from './modules/Api'
 
-import Button from 'react-bootstrap/Button';
+import Button from 'react-bootstrap/Button'
 import { BoxArrowRight, House, Journals, PeopleFill } from 'react-bootstrap-icons'
 
 const Profile = () => {
@@ -15,6 +18,7 @@ const Profile = () => {
     async function getProfileData() {}
   
     useEffect(() => {
+        getMyProfileInfoApi()
     }, [])
   
     return (

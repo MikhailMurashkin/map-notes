@@ -4,8 +4,9 @@ import { useState, useContext, useEffect } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
 import {
-    createStoryApi, getStoriesApi, subscribeApi,
-    getStoriesByAuthorIdApi, likeStoryApi, dislikeStoryApi, commentApi
+    createStoryApi, getStoriesApi, subscribeApi, getSubscribedAuthorsStoriesApi,
+    getStoriesByAuthorIdApi, likeStoryApi, dislikeStoryApi, commentApi,
+    deleteStoryApi, updateProfileDescriptionApi
 } from './modules/Api'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -802,6 +803,7 @@ const MapPage = () => {
                     <div className="menuLink" onClick={() => {
                         setShowMenu(false)
                         setSearchParams({"subscriptions": true})
+                        getSubscribedAuthorsStoriesApi()
                     }}>Мои подписки</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>

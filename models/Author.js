@@ -20,7 +20,10 @@ const authorSchema = new mongoose.Schema({
     },
     subscribersId: [{
         type: String
-    }]
+    }],
+    description: {
+        type: String
+    }
 }, { timestamps: true })
 
 authorSchema.pre('save', async function (next) {

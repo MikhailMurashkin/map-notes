@@ -145,6 +145,86 @@ export const commentApi = async (storyId, commentText) => {
 }
 
 
+export const getSubscribedAuthorsStoriesApi = async () => {
+  const response = await fetch(`${API_URL}/stories/getSubscribedAuthorsStories`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    }
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось загрузить ленту')
+  }
+
+  return data
+}
+
+
+export const getMyProfileInfoApi = async () => {
+  const response = await fetch(`${API_URL}/stories/getMyProfileInfo`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    }
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось загрузить данные о профиле')
+  }
+
+  return data
+}
+
+
+export const deleteStoryApi = async (storyId) => {
+  const response = await fetch(`${API_URL}/stories/deleteStory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      storyId
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось добавить комментарий к истории')
+  }
+
+  return data
+}
+
+
+export const updateProfileDescriptionApi = async (description) => {
+  const response = await fetch(`${API_URL}/stories/updateProfileDescription`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      description
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось обновить описание профиля')
+  }
+
+  return data
+}
+
+
 
 
 
