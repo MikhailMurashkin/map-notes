@@ -15,7 +15,8 @@ authRoutes.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Author already exists' });
         }
 
-        const author = await Author.create({ name, email, password });
+        const author = await Author.create({ name, email, password,
+            description: "", image: "" });
 
         const token = jwt.sign({ id: author._id }, process.env.JWT_SECRET, { expiresIn: '10d' });
         res.status(201).json({ token, authorId: author._id, name: author.name });
