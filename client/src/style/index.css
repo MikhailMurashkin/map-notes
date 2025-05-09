@@ -108,6 +108,7 @@ button:hover {
   font-size: 28px;
   font-weight: bold;
   text-align: center;
+  padding: 0px 40px;
 }
 
 .storyAuthor {
@@ -411,6 +412,7 @@ button:hover {
 
 .commentAuthor {
   font-weight: 600;
+  cursor: pointer;
 }
 
 .subsBlock {
@@ -577,18 +579,63 @@ button:hover {
   right: 0; 
   margin-inline: auto; 
   width: fit-content;
-  max-width: 80%;
+  max-width: 75%;
   z-index: 1;
   background-color: white;
-  padding: 2px 8px;
+  padding: 0.25em 0.5em;
   border-radius: 8px;
   font-size: 14px;
+  line-height: 14px;
+  text-align: center;
   display: flex;
   flex-direction: row;
   column-gap: 4px;
   align-items: center;
+  justify-content: center;
+  /* color: rgba(0, 0, 0, 0.55); */
+  box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, 0.2);
 }
 
-.close:hover {
-  color: red;
+.dots {
+  position: relative;
+  /* background-color: #d00; */
+}
+
+.dotsMenu {
+  position: absolute;
+  top: 24px;
+  right: -8px;
+}
+
+.absoluteDots {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+}
+
+.dotsIcon {
+  color: rgb(117, 117, 117);
+  cursor: pointer;
+}
+
+.dotsIcon:hover {
+  color: black;
+  transition-duration: 0.1s;
+}
+
+.storyMenuList {
+  width: max-content;
+}
+
+.storyMenuItem {
+  display: flex !important;
+  flex-direction: row;
+  column-gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.storyMenuItem:hover {
+  background-color: lightgray;
 }

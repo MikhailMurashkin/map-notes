@@ -44,7 +44,7 @@ const Profile = () => {
             <div className="profileDescription">
                 <div className="profileDescriptionTitle">
                     О себе:
-                    <PencilSquare size={19} color='rgb(117,117,117)' style={{cursor: 'pointer'}}
+                    <PencilSquare size={18} color='rgb(117,117,117)' style={{cursor: 'pointer'}}
                     onClick={() => {
                         setNewDescription(data.description)
                         setShowModal(true)

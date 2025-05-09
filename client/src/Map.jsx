@@ -14,9 +14,9 @@ import {Map, GeolocateControl, ScaleControl, FullscreenControl, NavigationContro
     Popup, Marker, useMap
 } from 'react-map-gl/maplibre'
 
-import { Button, Form, Image, Carousel, Offcanvas,  CloseButton } from 'react-bootstrap';
+import { Button, Form, Modal, Carousel, Offcanvas,  CloseButton, ListGroup } from 'react-bootstrap';
 import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, 
-    HandThumbsUpFill, ArrowUpCircleFill, XLg } from 'react-bootstrap-icons'
+    HandThumbsUpFill, ArrowUpCircleFill, ThreeDots, Trash3 } from 'react-bootstrap-icons'
 
 import Pin from './assets/pin'
 import Comments from './Comments'
@@ -63,6 +63,9 @@ const MapPage = () => {
     const [showSubscriptions, setShowSubscriptions] = useState(false)
     const [subscriptions, setSubscriptions] = useState([])
 
+    const [showStoryMenu, setShowStoryMenu] = useState(false)
+    const [showDeleteStoryodal, setShowDeleteStoryModal] = useState(false)
+    const [storyToDeleteId, setStoryToDeleteId] = useState(null)
     
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
@@ -71,7 +74,7 @@ const MapPage = () => {
     async function fetchData(){
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
-        console.log("fetched", stories)
+        console.log("fetched", storiesFetched)
         // setSearchParams({'authorId': 'abc'})
         
         return storiesFetched
@@ -407,6 +410,11 @@ const MapPage = () => {
         }
     }
 
+    async function deleteStory(storyId) {
+        await deleteStoryApi(storyId)
+        setSearchParams()
+    }
+
     const formatDate = (dateStr) => {
         let timestamp = Date.parse(dateStr)
         let date = new Date(timestamp)
@@ -423,11 +431,13 @@ const MapPage = () => {
     return (
         <div style={{display: 'flex'}}>
         <div style={{flex: 'auto', position: 'relative'}}>
+            {((searchParams.has("authorId") && authorShowed) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
-                Вы просматриваете истории автора
-                {/* <XLg size={14} className='close'/> */}
-                <CloseButton  />
-            </div>
+                {(searchParams.has("authorId")) ? 'Вы просматриваете истории автора ' + authorShowed?.authorName :
+                'Вы просматриваете истории авторов, на которых подписаны'}
+                <CloseButton onClick={() => setSearchParams()} />
+            </div>}
+
             <Map
             id='mymap'
             initialViewState={{
@@ -644,6 +654,7 @@ const MapPage = () => {
             {/* ИСТОРИЯ */}
             {(showStory && storyShowed) &&
             <div className="storyBlock">
+
                 <ArrowLeft size={18} className='backButton' onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
@@ -658,6 +669,28 @@ const MapPage = () => {
                     deleteSearchParamsTagAll("storyId")
                     goBack()
                 }} />
+
+                <div className='absoluteDots'>
+                    <div className='dots'>
+                        <ThreeDots className='dotsIcon' size={20} 
+                        onClick={() => setShowStoryMenu(!showStoryMenu)} />
+                        {showStoryMenu &&
+                        <div className="dotsMenu">
+                            <ListGroup className='storyMenuList'>
+                                {/* <ListGroup.Item  className='storyMenuItem'>Редактировать историю......</ListGroup.Item> */}
+                                <ListGroup.Item className='storyMenuItem' style={{color: '#d00'}}
+                                onClick={() => {
+                                    setShowStoryMenu(false)
+                                    setStoryToDeleteId(storyShowed.storyId)
+                                    setShowDeleteStoryModal(true)
+                                }}>
+                                    <Trash3 size={20} />
+                                    Удалить историю
+                                </ListGroup.Item>
+                            </ListGroup>
+                        </div>}
+                    </div>
+                </div>
                 {/* <button onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
@@ -748,17 +781,36 @@ const MapPage = () => {
             </div>
             }
 
+            <Modal show={showDeleteStoryodal} onHide={() => setShowDeleteStoryModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Удаление истории</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Вы уверены, что хотите удалить историю? Это действие необратимо.
+                </Modal.Body>
+                <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowDeleteStoryModal(false)}>
+                    Отмена
+                </Button>
+                <Button variant='danger' onClick={() => {
+                    setShowDeleteStoryModal(false)
+                    deleteStory(storyToDeleteId)
+                }}>
+                    Удалить историю
+                </Button>
+                </Modal.Footer>
+            </Modal>
+
+
 
             {/* СТРАНИЦА АВТОРА */}
             {showAuthor &&
             <div className="authorPage">
                 <div className="authorPageName">
                 <ArrowLeft size={18} className='backButton' onClick={() => {
-                    // setShowStory(false)
-                    // setSelectedMarkerIndex(-1)
+
                     setShowAuthor(false)
                     goBack()
-                    // deleteSearchParamsTagValue("authorId", auth)
                 }} />
                     <div className="profilePageIcon">{authorShowed?.authorName[0]}</div>
                     {authorShowed?.authorName}

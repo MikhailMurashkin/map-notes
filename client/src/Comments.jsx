@@ -1,11 +1,12 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useContext, useEffect } from 'react'
 import { AuthContext } from './modules/AuthContext'
 
 import {Pagination} from 'react-bootstrap'
 
 const Comments = (props) => {
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const [page, setPage] = useState(1)
     const [pagesCount, setPagesCount] = useState(1)
@@ -36,7 +37,9 @@ const Comments = (props) => {
                 {commentsShowed.map((comment, i) => {
                     return(
                         <div className="comment" key={i}>
-                            <div className="commentAuthor">{comment.authorName}</div>
+                            <div className="commentAuthor" onClick={() => setSearchParams({"authorId": comment.authorId})}>
+                                {comment.authorName}
+                            </div>
                             <div className="commentText">{comment.commentText}</div>
                             <div className="commentDate">{props.dateFunc(comment.createdAt)}</div>
                         </div>
