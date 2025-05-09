@@ -670,6 +670,7 @@ const MapPage = () => {
                     goBack()
                 }} />
 
+                {storyShowed.authoredByMe &&
                 <div className='absoluteDots'>
                     <div className='dots'>
                         <ThreeDots className='dotsIcon' size={20} 
@@ -690,7 +691,7 @@ const MapPage = () => {
                             </ListGroup>
                         </div>}
                     </div>
-                </div>
+                </div>}
                 {/* <button onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
