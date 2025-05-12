@@ -7,8 +7,8 @@ import Button from 'react-bootstrap/Button';
 import { Eye, EyeSlash } from 'react-bootstrap-icons'
 
 const Register = () => {
-    const [name, setName] = useState('Varya');
-    const [email, setEmail] = useState('varya@email.com');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('example@email.com');
     const [password, setPassword] = useState('password');
     const [inputColor, setInputColor] = useState('grey');
     const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +39,7 @@ const Register = () => {
         <form onSubmit={handleSubmit}>
             <div className="loginForm">
               <img src='../background.jpg' className='backgroundImg' />
+                <div className='whiteLoginBlock'>
                 <div className="title">Регистрация</div>
                 <div className="inputs">
                 <input className="basicInput" type="text" 
@@ -58,14 +59,15 @@ const Register = () => {
                     onFocus={() => setInputColor('grey')} 
                     onChange={(e) => setPassword(e.target.value)} required />
                     {!showPassword &&
-                      <Eye size={20} color='rgb(50, 50, 50)' className='passwordEye' 
+                      <Eye style={{marginTop: '5px'}} size={20} color='rgb(50, 50, 50)' className='passwordEye' 
                       onClick={() => setShowPassword(true)} />}
                       {showPassword &&
-                      <EyeSlash size={20} color='rgb(50, 50, 50)' className='passwordEye'
+                      <EyeSlash style={{marginTop: '5px'}} size={20} color='rgb(50, 50, 50)' className='passwordEye'
                       onClick={() => setShowPassword(false)} />}
                   </div>
                 <button className="basicButton" type="submit">Зарегистрироваться</button>
                 <Button variant='link' onClick={() => navigate('/login')}>Уже есть аккаунт? Войдите</Button>
+                </div>
                 </div>
             </div>
         </form>

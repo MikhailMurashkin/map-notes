@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useSearchParams, createSearchParams } from 'react-router-dom'
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 
 import { AuthContext } from './modules/AuthContext'
 import {
@@ -27,7 +27,8 @@ import Comments from './Comments'
 const MapPage = () => {
     const { login, author, logout } = useContext(AuthContext);
 
-    const {mymap} = useMap()
+    // const {mymap} = useMap("mymap")
+    const mymap = useRef(null)
 
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -35,13 +36,11 @@ const MapPage = () => {
 
     const [stories, setStories] = useState([])
 
+    const [initialCoordinates, setInitialCoordinates] = useState([37.61, 55.75])
+
     const [showPanel, setShowPanel] = useState(false)
     const [placeNewMarker, setPlaceNewMarker] = useState(false)
     const [mapDrag, setMapDrag] = useState(false)
-
-    // const [newLatitude, setNewLatitude] = useState()
-    // const [newLongitude, setNewLongitude] = useState('')
-    // const [zoom, setZoom] = useState(9)
 
     const [newMarker, setNewMarker] = useState(false)
     const [newStoryName, setNewStoryName] = useState("")
@@ -75,7 +74,6 @@ const MapPage = () => {
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
         console.log("fetched", storiesFetched)
-        // setSearchParams({'authorId': 'abc'})
         
         return storiesFetched
     }
@@ -139,7 +137,7 @@ const MapPage = () => {
             setShowSubscriptions(false)
             setShowStory(true)
             console.log(story)
-            mymap?.flyTo({
+            mymap.current.flyTo({
                 center: [story.longitude, story.latitude],
                 zoom: 15,
                 speed: 1.5,
@@ -173,8 +171,8 @@ const MapPage = () => {
     async function showAuthorPage (authorId) {
         
         let fetched = await fetchAuthorStories(authorId)
-        console.log("author",fetched)
         let storiesFetched = fetched.stories
+        console.log("author fetched", storiesFetched)
 
         let maxLon = 0
         let minLon = 180
@@ -187,28 +185,21 @@ const MapPage = () => {
             minLat = fetchedStory.latitude < minLat ? fetchedStory.latitude : minLat
         })
 
-        console.log(maxLon, minLon)
-        // mymap?.flyTo({
-        //     center: [(maxLon + minLon) / 2, (maxLat + minLat) / 2],
-        //     zoom: 5,
-        //     speed: 1.5,
-        //     curve: 1
-        // })
-
         if(storiesFetched.length == 1) {
-            mymap.flyTo({
-                center: [maxLon, maxLat],
-                zoom: 15,
-                speed: 1.5,
-                curve: 1
-            })
+            setTimeout(function() {
+                mymap.current.flyTo({
+                    center: [maxLon, maxLat],
+                    zoom: 15,
+                    speed: 1.5,
+                    curve: 1
+                })
+            }, 1000)
         } else {
             let bbox = [[minLon, minLat], [maxLon, maxLat]];
-            mymap.fitBounds(bbox, {
-                padding: {top: 150, bottom: 150, left: 150, right: 150}
-            })
+                mymap.current.fitBounds(bbox, {
+                    padding: {top: 150, bottom: 150, left: 150, right: 150}
+                })
         }
-
         
 
         setShowStory(false)
@@ -221,18 +212,45 @@ const MapPage = () => {
 
     async function fetchSubs() {
         let fetched = await getSubscribedAuthorsStoriesApi()
+        console.log(fetched)
         setStories(fetched.stories)
         return fetched
     }
 
     async function makeSubsShowed() {
         let fetched = await fetchSubs()
-        console.log(fetched)
+        let storiesFetched = fetched.stories
         if (searchParams.has("storyId")) {
             let idStory = searchParams.get("storyId")
-            makeStoryShow(fetched.stories, idStory)
-        }
-        else {
+            makeStoryShow(storiesFetched, idStory)
+        } else {
+            let maxLon = 0
+            let minLon = 180
+            let maxLat = -90
+            let minLat = 90
+            storiesFetched.forEach(fetchedStory => {
+                maxLon = fetchedStory.longitude > maxLon ? fetchedStory.longitude : maxLon
+                minLon = fetchedStory.longitude < minLon ? fetchedStory.longitude : minLon
+                maxLat = fetchedStory.latitude > maxLat ? fetchedStory.latitude : maxLat
+                minLat = fetchedStory.latitude < minLat ? fetchedStory.latitude : minLat
+            })
+
+            if(storiesFetched.length == 1) {
+                setTimeout(function() {
+                    mymap.current.flyTo({
+                        center: [maxLon, maxLat],
+                        zoom: 15,
+                        speed: 1.5,
+                        curve: 1
+                    })
+                }, 1000)
+            } else {
+                let bbox = [[minLon, minLat], [maxLon, maxLat]];
+                    mymap.current.fitBounds(bbox, {
+                        padding: {top: 150, bottom: 150, left: 150, right: 150}
+                    })
+            }
+            
             setShowStory(false)
             setStoryShowed(null)
             setSelectedMarkerIndex(-1)
@@ -253,7 +271,7 @@ const MapPage = () => {
         setAuthorShowed(null)
         setShowSubscriptions(false)
         if (!placeNewMarker) {
-            mymap.flyTo({
+            mymap.current.flyTo({
                 center: lastCenter,
                 zoom: lastZoom,
                 speed: 1.5,
@@ -263,16 +281,11 @@ const MapPage = () => {
     }
 
     useEffect(() => {
-        console.log('useeffect')
-        console.log(author)
         if (searchParams.has("subscriptions")) {
             makeSubsShowed()
             return
         }
         if (searchParams.has("authorId")) {
-                    // setShowStory(false)
-                    // setStoryShowed(null)
-                    // setShowAuthor(true)
             let id = searchParams.get("authorId")
             if (id != author._id) {
                 if (searchParams.has("storyId")) {
@@ -281,10 +294,8 @@ const MapPage = () => {
                     console.log('show story')
                 } else {
                     showAuthorPage(id)
-                    console.log('show page')
                 }
             } else {
-                console.log("ME")
                 if (searchParams.has("storyId")) {
                     let idStory = searchParams.get("storyId")
                     showAuthorStory(null, idStory)
@@ -340,7 +351,7 @@ const MapPage = () => {
         await likeStoryApi(storyId)
         let updated
         if (searchParams.has("subscriptions")) {
-            updated = fetchSubs()
+            updated = await fetchSubs()
             updated = updated.stories
         } else if (searchParams.has("authorId")) {
             let id = searchParams.get("authorId")
@@ -433,74 +444,76 @@ const MapPage = () => {
         <div style={{flex: 'auto', position: 'relative'}}>
             {((searchParams.has("authorId") && authorShowed) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
-                {(searchParams.has("authorId")) ? 'Вы просматриваете истории автора ' + authorShowed?.authorName :
+                {(searchParams.has("authorId")) ? 
+                (author._id == searchParams.get("authorId") ? 'Отображаются истории, написанные Вами' : 'Вы просматриваете истории автора ' + authorShowed?.authorName) :
                 'Вы просматриваете истории авторов, на которых подписаны'}
                 <CloseButton onClick={() => setSearchParams()} />
             </div>}
 
             <Map
-            id='mymap'
-            initialViewState={{
-                longitude: 37.61,
-                latitude: 55.75,
-                zoom: 9
-            }}
-            cursor={placeNewMarker ? (mapDrag ? 'grab' : 'url("/marker.png") 7 55, auto') : ''}
-            // latitude={latitude}
-            // longitude={longitude}
-            // zoom={zoom}
-            style={{width: '100%', height: '100vh', transitionDuration: '300ms'}}
-            mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-            onClick={(c)=>{
-                if (!placeNewMarker) {
-                    return
-                }
+                id='mymap'
+                ref={mymap}
+                initialViewState={{
+                    longitude: initialCoordinates[0],
+                    latitude: initialCoordinates[1],
+                    zoom: 9
+                }}
+                cursor={placeNewMarker ? (mapDrag ? 'grab' : 'url("/marker.png") 7 55, auto') : ''}
+                // latitude={latitude}
+                // longitude={longitude}
+                // zoom={zoom}
+                style={{width: '100%', height: '100vh', transitionDuration: '300ms'}}
+                mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+                onClick={(c)=>{
+                    if (!placeNewMarker) {
+                        return
+                    }
 
-                console.log("NEW")
+                    console.log("NEW")
+                    
+                    if (!newMarker) {
+                        setLastCenter(mymap.current.getCenter())
+                        setLastZoom(mymap.current.getZoom())
+                    }
+
+                    setNewMarker({
+                        lat: c.lngLat.lat,
+                        lng: c.lngLat.lng
+                    })
+
+                    let zoomValue = mymap.current.getZoom()
+
+                    console.log(c.lngLat.lat)
+                    console.log(c.lngLat.lng)
+                    
+                    mymap.current.flyTo({
+                        center: [c.lngLat.lng, c.lngLat.lat],
+                        zoom: zoomValue > 15 ? zoomValue : 15,
+                        speed: 1.3,
+                        curve: 1
+                    })
+
+                    // setNewLatitude(c.lngLat.lat)
+                    // setNewLongitude(c.lngLat.lng)
+                }}
+
+                onDragStart={() => {
+                    setMapDrag(true)
+                }}
+                onDragEnd={() => {
+                    setMapDrag(false)
+                }}
+
+                onZoomEnd={() => {
+                    if (mymap.current.getZoom() != 15) {
+                        setZoomed(true)
+                    }
+                }}
                 
-                if (!newMarker) {
-                    setLastCenter(mymap.getCenter())
-                    setLastZoom(mymap.getZoom())
-                }
-
-                setNewMarker({
-                    lat: c.lngLat.lat,
-                    lng: c.lngLat.lng
-                })
-
-                let zoomValue = mymap.getZoom()
-
-                console.log(c.lngLat.lat)
-                console.log(c.lngLat.lng)
-                
-                mymap.flyTo({
-                    center: [c.lngLat.lng, c.lngLat.lat],
-                    zoom: zoomValue > 15 ? zoomValue : 15,
-                    speed: 1.3,
-                    curve: 1
-                })
-
-                // setNewLatitude(c.lngLat.lat)
-                // setNewLongitude(c.lngLat.lng)
-            }}
-
-            onDragStart={() => {
-                setMapDrag(true)
-            }}
-            onDragEnd={() => {
-                setMapDrag(false)
-            }}
-
-            onZoomEnd={() => {
-                if (mymap.getZoom() != 15) {
-                    setZoomed(true)
-                }
-            }}
-            
             >
                 <GeolocateControl />
                 <ScaleControl />
-                {/* <FullscreenControl /> */}
+                <FullscreenControl />
                 <NavigationControl />
 
                 {/* ВСЕ МАРКЕРЫ И ONCLICK */}
@@ -520,11 +533,11 @@ const MapPage = () => {
                                 setZoomed(false)
                                 
                                 if(!showStory) {
-                                    setLastCenter(mymap.getCenter())
-                                    setLastZoom(mymap.getZoom())
+                                    setLastCenter(mymap.current.getCenter())
+                                    setLastZoom(mymap.current.getZoom())
                                 }
                                 
-                                mymap.flyTo({
+                                mymap.current.flyTo({
                                     center: [story.longitude, story.latitude],
                                     zoom: 15,
                                     speed: 1.5,
@@ -642,7 +655,7 @@ const MapPage = () => {
                             setNewStoryText('')
                             setNewStoryImages([])
 
-                            mymap.flyTo({
+                            mymap.current.flyTo({
                                 center: lastCenter,
                                 zoom: lastZoom,
                                 speed: 1.5,
@@ -663,7 +676,7 @@ const MapPage = () => {
                 <ArrowLeft size={18} className='backButton' onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
-                        mymap.flyTo({
+                        mymap.current.flyTo({
                             center: lastCenter,
                             zoom: lastZoom
                         })
@@ -700,7 +713,7 @@ const MapPage = () => {
                 {/* <button onClick={() => {
                     if (!zoomed) {
                         console.log(lastCenter)
-                        mymap.flyTo({
+                        mymap.current.flyTo({
                             center: lastCenter,
                             zoom: lastZoom
                         })
@@ -830,8 +843,8 @@ const MapPage = () => {
                     {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
                         return(
                             <div className="authorStory" key={i} onClick={() => {
-                                    setLastCenter(mymap.getCenter())
-                                    setLastZoom(mymap.getZoom())
+                                    setLastCenter(mymap.current.getCenter())
+                                    setLastZoom(mymap.current.getZoom())
                                 
                                 addOrUpdateSearchParam("storyId", story?.storyId)
                                 // makeStoryShow(stories, story.storyId)
@@ -857,7 +870,7 @@ const MapPage = () => {
 
             {/* ПОДПИСКИ */}
             {showSubscriptions &&
-            <div className="subsPage">
+            <div className="subsPage" style={{overflowY: 'scroll'}}>
             <div className="subsPageTitle">
                 Ваша лента
             </div>
@@ -871,8 +884,8 @@ const MapPage = () => {
                     {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
                         return(
                             <div className="subsStory" key={i} onClick={() => {
-                                setLastCenter(mymap.getCenter())
-                                setLastZoom(mymap.getZoom())
+                                setLastCenter(mymap.current.getCenter())
+                                setLastZoom(mymap.current.getZoom())
                                 
                                 addOrUpdateSearchParam("storyId", story?.storyId)
                             }}>
