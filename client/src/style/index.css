@@ -514,12 +514,11 @@ button:hover {
 .profileDescription {
   width: 100%;
   color: rgb(50, 50, 50);
+  text-align: center;
 }
 
 .profileDescriptionTitle {
   font-size: 20px;
-  display: flex;
-  flex-direction: row;
   column-gap: 6px;
   align-items: center;
 }

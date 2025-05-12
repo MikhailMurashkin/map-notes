@@ -46,7 +46,7 @@ const MapPage = () => {
     const [newMarker, setNewMarker] = useState(false)
     const [newStoryName, setNewStoryName] = useState("")
     const [newStoryText, setNewStoryText] = useState("")
-    const [newStoryImages, setNewStoryImages] = useState("")
+    const [newStoryImages, setNewStoryImages] = useState([])
 
     const [showStory, setShowStory] = useState(false)
     const [storyShowed, setStoryShowed] = useState(null)
@@ -306,7 +306,7 @@ const MapPage = () => {
 
 
     async function createStory () {
-        await createStoryApi(newStoryName, newStoryText, ["https://www.hdwallpapers.in/thumbs/2021/lake_with_reflection_of_mountain_and_clouds_4k_hd_nature-t2.jpg"],
+        await createStoryApi(newStoryName, newStoryText, newStoryImages,
             newMarker.lng, newMarker.lat
         )
         let newStories = await fetchData()
@@ -449,7 +449,7 @@ const MapPage = () => {
             // latitude={latitude}
             // longitude={longitude}
             // zoom={zoom}
-            style={{width: '100%', height: '100vh', transitionDuration: '300ms', cursor: 'url("/marker.png"), auto'}}
+            style={{width: '100%', height: '100vh', transitionDuration: '300ms'}}
             mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
             onClick={(c)=>{
                 if (!placeNewMarker) {
@@ -541,7 +541,7 @@ const MapPage = () => {
                                 console.log("marker click")
                             }}
                         >
-                            <Pin selected={selectedMarkerIndex == key} />
+                            <Pin selected={selectedMarkerIndex == key} mine={story.authoredByMe} />
                         </Marker>
                     )
                 })}
@@ -623,8 +623,13 @@ const MapPage = () => {
                     </div>
                     <div className='inputBlock'>
                         <Form.Label>Фотографии</Form.Label>
-                        <Form.Control onChange={e => setNewStoryImages(e.target.value)}
-                        value={""} />
+                        <Form.Group controlId="formFileMultiple" className="mb-3">
+                            <Form.Control type="file" name='images' accept=".gif,.jpg,.jpeg,.png" multiple
+                                onChange={e => setNewStoryImages(e.target.files)}
+                            />
+                        </Form.Group>
+                        {/* <Form.Control onChange={e => setNewStoryImages(e.target.value)} */}
+                        {/* value={""} /> */}
                     </div>
                     <div className="newStoryButtons">
                         <button onClick={createStory}>

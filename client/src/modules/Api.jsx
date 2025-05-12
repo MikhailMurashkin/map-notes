@@ -1,15 +1,31 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://localhost:3000'
+
+// const body = new FormData()
+//   // for (const image of storyImages) {
+//   //   body.append('files[]', image, image.name)
+//   // }
+//   body.append('storyName', storyName)
+//   body.append('storyText', storyText)
+//   body.append('longitude', longitude)
+//   body.append('latitude', latitude)
 
 export const createStoryApi = async (storyName, storyText, storyImages, longitude, latitude) => {
+  // console.log(storyImages)
+  
+  const body = new FormData()
+  for (const image of storyImages) {
+    body.append('images', image, image.name)
+  }
+  body.append('storyName', storyName)
+  body.append('storyText', storyText)
+  body.append('longitude', longitude)
+  body.append('latitude', latitude)
   const response = await fetch(`${API_URL}/stories/createStory`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${localStorage.getItem("token")}`,
     },
-    body: JSON.stringify({
-      storyName, storyText, storyImages, longitude, latitude
-    })
+    body
   })
 
   const data = await response.json()
@@ -20,6 +36,28 @@ export const createStoryApi = async (storyName, storyText, storyImages, longitud
 
   return data;
 }
+
+// export const createStoryApi = async (storyName, storyText, storyImages, longitude, latitude) => {
+//   console.log(storyImages)
+//   const response = await fetch(`${API_URL}/stories/createStory`, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': `Bearer ${localStorage.getItem("token")}`,
+//     },
+//     body: JSON.stringify({
+//       storyName, storyText, storyImages, longitude, latitude
+//     })
+//   })
+
+//   const data = await response.json()
+
+//   if (!response.ok) {
+//     throw new Error(data.message || 'Не удалось создать иторию')
+//   }
+
+//   return data;
+// }
 
 export const getStoriesApi = async () => {
   const response = await fetch(`${API_URL}/stories/getStories`, {
