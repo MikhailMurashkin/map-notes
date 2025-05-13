@@ -175,6 +175,7 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
         res.json({
           authorName: author.name,
           authorId: author._id,
+          authorDescription: author.description,
           subscribedByMe,
           subscribersAmmount: author.subscribersId.length,
           description: author.description,

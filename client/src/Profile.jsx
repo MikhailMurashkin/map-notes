@@ -9,6 +9,7 @@ import {
 import { Modal, Form, Button } from 'react-bootstrap'
 import { BoxArrowRight, House, Journals, PeopleFill, PersonPlusFill,
             PencilSquare } from 'react-bootstrap-icons'
+import Loading from './Loading'
 
 const Profile = () => {
     const { login, author, logout } = useContext(AuthContext);
@@ -17,11 +18,15 @@ const Profile = () => {
     const [data, setData] = useState(null)
     const [newDescription, setNewDescription] = useState('')
     const [showModal, setShowModal] = useState(false)
+    const [isLoaded, setIsLoaded] = useState(false)
     
     async function getProfileData() {
         let fetched = await getMyProfileInfoApi()
         setData(fetched)
         console.log(fetched)
+        if (!isLoaded) {
+            setIsLoaded(true)
+        }
     }
   
     useEffect(() => {
@@ -31,10 +36,10 @@ const Profile = () => {
     async function updateDescription () {
         await updateProfileDescriptionApi(newDescription)
         await getProfileData()
-        console.log('updated!!!')
         setShowModal(false)
     }
   
+    if (isLoaded) {
     return (
         <div className="profile">
             <div className="profileIcon">
@@ -116,7 +121,14 @@ const Profile = () => {
                 </Modal.Footer>
             </Modal>
         </div>
-    );
+    );}
+    else {
+        return(
+            <div style={{width: '100vw', height: '100vh'}}>
+                <Loading />
+            </div>
+        )
+    }
   };
 
 export default Profile;

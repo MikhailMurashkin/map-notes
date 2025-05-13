@@ -20,6 +20,7 @@ import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill,
 
 import Pin from './assets/pin'
 import Comments from './Comments'
+import Loading from './Loading'
 
 
 
@@ -69,6 +70,8 @@ const MapPage = () => {
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState(-1)
 
     const [fetchedInitialStory, setFetchedInitialStory] = useState(false)
+
+    const [isLoaded, setIsLoaded] = useState(false)
 
     async function fetchData(){
         let storiesFetched = await getStoriesApi()
@@ -136,6 +139,8 @@ const MapPage = () => {
             setShowMenu(false)
             setShowSubscriptions(false)
             setShowStory(true)
+            setShowStoryMenu(false)
+            setShowDeleteStoryModal(false)
             console.log(story)
             mymap.current.flyTo({
                 center: [story.longitude, story.latitude],
@@ -144,6 +149,7 @@ const MapPage = () => {
                 curve: 1
             })
         }
+        setIsLoaded(true)
     }
 
     async function fetchAndSetStory (storyId) {
@@ -159,20 +165,20 @@ const MapPage = () => {
         let fetched = stories
         if (!fetchedInitialStory || !authorShowed || authorShowed.authorId != authorId) {
             let fetchedData = await fetchAuthorStories(authorId)
+            console.log(fetchedData)
             fetched = fetchedData.stories
             setFetchedInitialStory(true)
         }
-        // setShowAuthor(false)
-        console.log("show author", fetched)
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
+        setIsLoaded(true)
     }
 
     async function showAuthorPage (authorId) {
         
         let fetched = await fetchAuthorStories(authorId)
         let storiesFetched = fetched.stories
-        console.log("author fetched", storiesFetched)
+        console.log("author fetched", fetched)
 
         let maxLon = 0
         let minLon = 180
@@ -208,6 +214,7 @@ const MapPage = () => {
         setShowMenu(false)
         setShowSubscriptions(false)
         setShowAuthor(true)
+        setIsLoaded(true)
     }
 
     async function fetchSubs() {
@@ -223,6 +230,7 @@ const MapPage = () => {
         if (searchParams.has("storyId")) {
             let idStory = searchParams.get("storyId")
             makeStoryShow(storiesFetched, idStory)
+            setIsLoaded(true)
         } else {
             let maxLon = 0
             let minLon = 180
@@ -258,6 +266,7 @@ const MapPage = () => {
             setShowAuthor(false)
             setAuthorShowed(null)
             setShowSubscriptions(true)
+            setIsLoaded(true)
         }
     }
 
@@ -278,9 +287,11 @@ const MapPage = () => {
                 curve: 1
             })
         }
+        setIsLoaded(true)
     }
 
     useEffect(() => {
+        setIsLoaded(false)
         if (searchParams.has("subscriptions")) {
             makeSubsShowed()
             return
@@ -368,7 +379,7 @@ const MapPage = () => {
         await dislikeStoryApi(storyId)
         let updated
         if (searchParams.has("subscriptions")) {
-            updated = fetchSubs()
+            updated = await fetchSubs()
             updated = updated.stories
         } else if (searchParams.has("authorId")) {
             let id = searchParams.get("authorId")
@@ -386,7 +397,7 @@ const MapPage = () => {
         setNewComment("")
         let updated
         if (searchParams.has("subscriptions")) {
-            updated = fetchSubs()
+            updated = await fetchSubs()
             updated = updated.stories
         } else if (searchParams.has("authorId")) {
             let id = searchParams.get("authorId")
@@ -404,7 +415,7 @@ const MapPage = () => {
         await subscribeApi(authorId)
         let updated
         if (searchParams.has("subscriptions")) {
-            updated = fetchSubs()
+            updated = await fetchSubs()
             updated = updated.stories
             if (searchParams.has("storyId")) {
                 setSearchParams({"subscriptions": true})
@@ -595,6 +606,11 @@ const MapPage = () => {
         </div>
 
 
+        {!isLoaded &&
+        <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
+            <Loading />
+        </div>}
+        {isLoaded &&
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
 
             <div className="topHolder">
@@ -691,7 +707,7 @@ const MapPage = () => {
                 {storyShowed.authoredByMe &&
                 <div className='absoluteDots'>
                     <div className='dots'>
-                        <ThreeDots className='dotsIcon' size={20} 
+                        <ThreeDots id='threedots' className='dotsIcon' size={20} 
                         onClick={() => setShowStoryMenu(!showStoryMenu)} />
                         {showStoryMenu &&
                         <div className="dotsMenu">
@@ -732,7 +748,7 @@ const MapPage = () => {
                     {storyShowed?.authorName}
                     </div>
                     {!storyShowed.authoredByMe &&
-                    <button className='followButton' onClick={() => subscribe(storyShowed?.authorId)}>
+                    <button className={storyShowed?.subscribedByMe ? 'unfollowButton' : 'followButton'} onClick={() => subscribe(storyShowed?.authorId)}>
                         {storyShowed?.subscribedByMe ? 'Отписаться' : 'Подписаться'}
                     </button>
                     }
@@ -834,9 +850,15 @@ const MapPage = () => {
                     <div className="profilePageIcon">{authorShowed?.authorName[0]}</div>
                     {authorShowed?.authorName}
                     {authorShowed?.authorId != author._id &&
-                    <button className='followButton' onClick={() => subscribe(authorShowed?.authorId)}>
+                    <button className={authorShowed?.subscribedByMe ? 'unfollowButton' : 'followButton'} onClick={() => subscribe(authorShowed?.authorId)}>
                         {authorShowed?.subscribedByMe ? 'Отписаться' :'Подписаться'}
                     </button>}
+                </div>
+                <div className="authorPageInfo">
+                    <div className="authorPageSubcribers">
+                        {authorShowed?.subscribersAmmount} подписчиков
+                    </div>
+                    <div className="authorPageDescription">{authorShowed?.authorDescription}</div>
                 </div>
                 {stories.length > 0 &&
                 <div className="authorStoriesBlock">
@@ -912,6 +934,7 @@ const MapPage = () => {
                 </div>}
         </div>}
         </div>
+        }
 
 
 
