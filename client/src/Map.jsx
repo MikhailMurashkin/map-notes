@@ -429,7 +429,7 @@ const MapPage = () => {
     return (
         <div style={{display: 'flex'}}>
         <div style={{flex: 'auto', position: 'relative'}}>
-            {((searchParams.has("authorId") ) || searchParams.has("subscriptions")) &&
+            {((searchParams.has("authorId") && authorShowed) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
                 {(searchParams.has("authorId")) ? 
                 (author._id == searchParams.get("authorId") ? 'Мои истории' : 'Истории автора ' + authorShowed?.authorName) :
@@ -518,7 +518,7 @@ const MapPage = () => {
                                 })
                                 
                                 setZoomed(false)
-                                
+
                                 addOrUpdateSearchParam("storyId", story.storyId)
                             }}
                         >
