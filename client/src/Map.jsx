@@ -175,19 +175,17 @@ const MapPage = () => {
         })
 
         if(storiesFetched.length == 1) {
-            setTimeout(function() {
-                mymap.current.flyTo({
-                    center: [maxLon, maxLat],
-                    zoom: 15,
-                    speed: 1.5,
-                    curve: 1
-                })
-            }, 1000)
+            mymap.current.flyTo({
+                center: [maxLon, maxLat],
+                zoom: 15,
+                speed: 1.5,
+                curve: 1
+            })
         } else {
             let bbox = [[minLon, minLat], [maxLon, maxLat]];
-                mymap.current.fitBounds(bbox, {
-                    padding: {top: 150, bottom: 150, left: 150, right: 150}
-                })
+            mymap.current.fitBounds(bbox, {
+                padding: {top: 150, bottom: 150, left: 150, right: 150}
+            })
         }
         
 
@@ -226,28 +224,24 @@ const MapPage = () => {
             })
 
             if(storiesFetched.length == 0){
-                setTimeout(function() {
-                    mymap.current.flyTo({
-                        center: initialCoordinates,
-                        zoom: 9,
-                        speed: 1.5,
-                        curve: 1
-                    })
-                }, 1000)
+                mymap.current.flyTo({
+                    center: initialCoordinates,
+                    zoom: 9,
+                    speed: 1.5,
+                    curve: 1
+                })
             } else if(storiesFetched.length == 1) {
-                setTimeout(function() {
-                    mymap.current.flyTo({
-                        center: [maxLon, maxLat],
-                        zoom: 15,
-                        speed: 1.5,
-                        curve: 1
-                    })
-                }, 1000)
+                mymap.current.flyTo({
+                    center: [maxLon, maxLat],
+                    zoom: 15,
+                    speed: 1.5,
+                    curve: 1
+                })
             } else {
                 let bbox = [[minLon, minLat], [maxLon, maxLat]];
-                    mymap.current.fitBounds(bbox, {
-                        padding: {top: 150, bottom: 150, left: 150, right: 150}
-                    })
+                mymap.current.fitBounds(bbox, {
+                    padding: {top: 150, bottom: 150, left: 150, right: 150}
+                })
             }
             
             setShowStory(false)
