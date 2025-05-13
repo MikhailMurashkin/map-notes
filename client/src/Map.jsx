@@ -81,10 +81,9 @@ const MapPage = () => {
     async function fetchAuthorStories (authorId) {
         let dataFetched = await getStoriesByAuthorIdApi(authorId)
         let storiesFetched = dataFetched.stories
-        let arr = new Array(...storiesFetched)
-        arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0))
         setStories(storiesFetched)
         setAuthorShowed(dataFetched)
+        console.log(dataFetched)
         return dataFetched
     }
 
@@ -123,7 +122,9 @@ const MapPage = () => {
             setStoryShowed(story)
             setNewComment("")
             setShowAuthor(false)
-            setAuthorShowed(null)
+            if (!searchParams.has('storyId')) {
+                setAuthorShowed(null)
+            }
             setShowMenu(false)
             setShowSubscriptions(false)
             setShowStory(true)
@@ -281,6 +282,9 @@ const MapPage = () => {
     }
 
     useEffect(() => {
+        setShowStory(false)
+        setShowAuthor(false)
+        setShowSubscriptions(false)
         setIsLoaded(false)
         if (searchParams.has("subscriptions")) {
             makeSubsShowed()
@@ -425,7 +429,7 @@ const MapPage = () => {
     return (
         <div style={{display: 'flex'}}>
         <div style={{flex: 'auto', position: 'relative'}}>
-            {((searchParams.has("authorId")) || searchParams.has("subscriptions")) &&
+            {((searchParams.has("authorId") ) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
                 {(searchParams.has("authorId")) ? 
                 (author._id == searchParams.get("authorId") ? 'Мои истории' : 'Истории автора ' + authorShowed?.authorName) :
@@ -514,9 +518,7 @@ const MapPage = () => {
                                 })
                                 
                                 setZoomed(false)
-                                setShowAuthor(false)
-                                setShowStory(true)
-                                setStoryShowed(story)
+                                
                                 addOrUpdateSearchParam("storyId", story.storyId)
                             }}
                         >
