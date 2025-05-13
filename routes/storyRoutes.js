@@ -1,11 +1,8 @@
 import express from 'express'
-import moment from 'moment-timezone'
 
 import Author from '../models/Author.js'
 import Story from '../models/Story.js'
 import Comment from '../models/Comment.js'
-// import GroupMatch from '../models/GroupMatch.js'
-// import Chat from '../models/Chat.js'
 import protect from '../middleware/authMiddleware.js'
 const storyRoutes = express.Router()
 
@@ -13,8 +10,6 @@ const storyRoutes = express.Router()
 import multer from 'multer'
 import fs from 'fs'
 const upload = multer({ dest: 'uploads/' })
-
-const moscowTime = moment.tz("Europe/Moscow")
 
 storyRoutes.post('/createStory', protect, upload.array('images', 12), async (req, res) => {
     try {
@@ -28,10 +23,7 @@ storyRoutes.post('/createStory', protect, upload.array('images', 12), async (req
           let src = fs.createReadStream(tmp_path)
           let dest = fs.createWriteStream(target_path)
           src.pipe(dest)
-          // src.on('end', function() { res.render('complete'); })
-          // src.on('error', function(err) { res.render('error'); })
         })
-
 
         const { storyName, storyText, storyImages, longitude, latitude } = req.body
 
@@ -131,43 +123,41 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
 
         let authorStoriesExtended = []
         authorStories.forEach(authorStory => {
-            authorStory = authorStory._doc
+          authorStory = authorStory._doc
 
-            authorStory.authorName = author.name
+          authorStory.authorName = author.name
 
-            authorStory.authoredByMe = authorStory.authorId == req.author
+          authorStory.authoredByMe = authorStory.authorId == req.author
 
-            authorStory.likedByMe = authorStory.likedAuthorsId.indexOf(req.author) == -1 ? false : true
-            authorStory.dislikedByMe = authorStory.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
-
-              
-            authorStory.ammountOfLikes = authorStory.likedAuthorsId.length
-            authorStory.ammountOfDislikes = authorStory.dislikedAuthorsId.length
-            delete authorStory.likedAuthorsId
-            delete authorStory.dislikedAuthorsId
+          authorStory.likedByMe = authorStory.likedAuthorsId.indexOf(req.author) == -1 ? false : true
+          authorStory.dislikedByMe = authorStory.dislikedAuthorsId.indexOf(req.author) == -1 ? false : true
 
             
-            let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == authorStory.authorId)].subscribersId
-            authorStory.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
+          authorStory.ammountOfLikes = authorStory.likedAuthorsId.length
+          authorStory.ammountOfDislikes = authorStory.dislikedAuthorsId.length
+          delete authorStory.likedAuthorsId
+          delete authorStory.dislikedAuthorsId
 
-            let authorStoryComments = []
-  
-            // Author.find({}).then(authors => {
-              comments.forEach(comment => {
-                if (comment.storyId == authorStory.storyId) {
-                  comment = comment._doc
-                  let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
-                  comment.authorName = authors[commentAuthorI].name
-                  authorStoryComments.push(comment)
-                }
-              })
-            
-  
-            authorStory.comments = authorStoryComments.reverse()
+          
+          let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == authorStory.authorId)].subscribersId
+          authorStory.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
 
-            authorStoriesExtended.push(authorStory)
+          let authorStoryComments = []
+
+          comments.forEach(comment => {
+            if (comment.storyId == authorStory.storyId) {
+              comment = comment._doc
+              let commentAuthorI = authors.findIndex(a => a.id == comment.authorId)
+              comment.authorName = authors[commentAuthorI].name
+              authorStoryComments.push(comment)
+            }
+          })
+          
+
+          authorStory.comments = authorStoryComments.reverse()
+
+          authorStoriesExtended.push(authorStory)
         })
-
         
         let authorSubscribers = author.subscribersId
         let subscribedByMe = authorSubscribers.indexOf(req.author) == -1 ? false : true
@@ -187,99 +177,6 @@ storyRoutes.post('/getStoriesByAuthorId', protect, async (req, res) => {
         console.log(error)
         res.status(500).json({ message: 'Server error' })
     }
-})
-
-storyRoutes.post('/likeStory', protect, async (req, res) => {
-  try {
-      const { storyId } = req.body
-      let story = await Story.findOne({ storyId })
-
-      if (story.likedAuthorsId.indexOf(req.author) >= 0) {
-        await Story.findOneAndUpdate({ storyId }, {
-          $pull: {likedAuthorsId: req.author}
-        })
-      } else {
-        await Story.findOneAndUpdate({ storyId }, {
-          $push: {likedAuthorsId: req.author},
-          $pull: {dislikedAuthorsId: req.author}
-        })
-      }
-
-      res.status(200).json({ message: 'Like updated' });
-  } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Server error' });
-  }
-})
-
-
-storyRoutes.post('/dislikeStory', protect, async (req, res) => {
-  try {
-      const { storyId } = req.body
-      let story = await Story.findOne({ storyId })
-
-      if (story.dislikedAuthorsId.indexOf(req.author) >= 0) {
-        await Story.findOneAndUpdate({ storyId }, {
-          $pull: {dislikedAuthorsId: req.author}
-        })
-      } else {
-        await Story.findOneAndUpdate({ storyId }, {
-          $push: {dislikedAuthorsId: req.author},
-          $pull: {likedAuthorsId: req.author}
-        })
-      }
-
-      res.status(200).json({ message: 'Dislike updated' });
-  } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Server error' });
-  }
-})
-
-
-storyRoutes.post('/subscribeAuthor', protect, async (req, res) => {
-  try {
-      const { authorId } = req.body
-      let author = await Author.findById(authorId)
-
-      if (author.subscribersId.indexOf(req.author) < 0) {
-        await Author.findByIdAndUpdate(authorId, {
-          $push: {subscribersId: req.author}
-        })
-      } else {
-        await Author.findByIdAndUpdate(authorId, {
-          $pull: {subscribersId: req.author}
-        })
-      }
-
-      res.status(200).json({ message: 'Subscription updated' });
-  } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Server error' });
-  }
-})
-
-
-storyRoutes.post('/comment', protect, async (req, res) => {
-  try {
-      const { storyId, commentText } = req.body
-      let story = await Story.findOne({ storyId })
-      if(!story) {
-        res.status(404).json({ message: 'Wrong story id' });
-      }
-
-      const comment = await Comment.create({
-          storyId,
-          authorId: req.author,
-          commentText,
-          createdAt: Date.now()
-      })
-
-      res.status(201).json({ message: 'Comment added' })
-  } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: 'Server error' })
-  }
 })
 
 storyRoutes.get('/getSubscribedAuthorsStories', protect, async (req, res) => {
@@ -340,6 +237,96 @@ storyRoutes.get('/getSubscribedAuthorsStories', protect, async (req, res) => {
   }
 })
 
+storyRoutes.post('/likeStory', protect, async (req, res) => {
+  try {
+      const { storyId } = req.body
+      let story = await Story.findOne({ storyId })
+
+      if (story.likedAuthorsId.indexOf(req.author) >= 0) {
+        await Story.findOneAndUpdate({ storyId }, {
+          $pull: {likedAuthorsId: req.author}
+        })
+      } else {
+        await Story.findOneAndUpdate({ storyId }, {
+          $push: {likedAuthorsId: req.author},
+          $pull: {dislikedAuthorsId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Like updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
+
+storyRoutes.post('/dislikeStory', protect, async (req, res) => {
+  try {
+      const { storyId } = req.body
+      let story = await Story.findOne({ storyId })
+
+      if (story.dislikedAuthorsId.indexOf(req.author) >= 0) {
+        await Story.findOneAndUpdate({ storyId }, {
+          $pull: {dislikedAuthorsId: req.author}
+        })
+      } else {
+        await Story.findOneAndUpdate({ storyId }, {
+          $push: {dislikedAuthorsId: req.author},
+          $pull: {likedAuthorsId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Dislike updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
+
+storyRoutes.post('/subscribeAuthor', protect, async (req, res) => {
+  try {
+      const { authorId } = req.body
+      let author = await Author.findById(authorId)
+
+      if (author.subscribersId.indexOf(req.author) < 0) {
+        await Author.findByIdAndUpdate(authorId, {
+          $push: {subscribersId: req.author}
+        })
+      } else {
+        await Author.findByIdAndUpdate(authorId, {
+          $pull: {subscribersId: req.author}
+        })
+      }
+
+      res.status(200).json({ message: 'Subscription updated' });
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' });
+  }
+})
+
+storyRoutes.post('/comment', protect, async (req, res) => {
+  try {
+      const { storyId, commentText } = req.body
+      let story = await Story.findOne({ storyId })
+      if(!story) {
+        res.status(404).json({ message: 'Wrong story id' });
+      }
+
+      const comment = await Comment.create({
+          storyId,
+          authorId: req.author,
+          commentText,
+          createdAt: Date.now()
+      })
+
+      res.status(201).json({ message: 'Comment added' })
+  } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+  }
+})
+
 storyRoutes.get('/getMyProfileInfo', protect, async (req, res) => {
   try {
     let author = await Author.findById(req.author)
@@ -369,8 +356,7 @@ storyRoutes.get('/getMyProfileInfo', protect, async (req, res) => {
       res.status(500).json({ message: 'Server error' })
   }
 })
-
-
+  
 storyRoutes.post('/updateProfileDescription', protect, async (req, res) => {
   try {
       const { description } = req.body
@@ -394,5 +380,6 @@ const generateId = () => {
     }
     return code;
 }
+
 
 export default storyRoutes

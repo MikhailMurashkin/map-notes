@@ -61,7 +61,6 @@ const MapPage = () => {
     const [authorShowed, setAuthorShowed] = useState(null)
 
     const [showSubscriptions, setShowSubscriptions] = useState(false)
-    const [subscriptions, setSubscriptions] = useState([])
 
     const [showStoryMenu, setShowStoryMenu] = useState(false)
     const [showDeleteStoryodal, setShowDeleteStoryModal] = useState(false)
@@ -76,7 +75,6 @@ const MapPage = () => {
     async function fetchData(){
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
-        console.log("fetched", storiesFetched)
         
         return storiesFetched
     }
@@ -86,37 +84,15 @@ const MapPage = () => {
         let storiesFetched = dataFetched.stories
         let arr = new Array(...storiesFetched)
         arr.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0))
-        console.log("arr",arr)
         setStories(storiesFetched)
         setAuthorShowed(dataFetched)
         return dataFetched
     }
 
-    function addSearchParam (tag, value) {
-        setSearchParams((searchParams) => {
-            searchParams.append(tag, value)
-            return searchParams
-        })
-    }
 
     function addOrUpdateSearchParam (tag, value) {
         setSearchParams((searchParams) => {
             searchParams.set(tag, value)
-            return searchParams
-        })
-    }
-
-    function deleteSearchParamsTagAll (tag) {
-        // setSearchParams((searchParams) => {
-        //     searchParams.delete(tag)
-        //     console.log(searchParams.toString())
-        //     return searchParams
-        // })
-    }
-
-    function deleteSearchParamsTagValue (tag, value) {
-        setSearchParams((searchParams) => {
-            searchParams.delete(tag, value)
             return searchParams
         })
     }
@@ -130,7 +106,6 @@ const MapPage = () => {
             searchParams.delete("authorId")
             searchParams.delete("subscriptions")
             setSearchParams(searchParams)
-            console.log(lastCenter)
             mymap.current.flyTo({
                 center: lastCenter,
                 zoom: lastZoom,
@@ -143,7 +118,6 @@ const MapPage = () => {
     function makeStoryShow(allStories, storyId) {
         let arr = new Array(...allStories)
         let index = arr.findIndex(a => a.storyId == storyId)
-        console.log("got id " + storyId+", got index " + index)
         if (index > -1) {
             let story = arr[index]
             setSelectedMarkerIndex(index)
@@ -169,8 +143,6 @@ const MapPage = () => {
     async function fetchAndSetStory (storyId) {
         let fetched = stories
             fetched = await fetchData()
-            // setFetchedInitialStory(true)
-        
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
     }
@@ -179,7 +151,6 @@ const MapPage = () => {
         let fetched = stories
         if (!fetchedInitialStory || !authorShowed || authorShowed.authorId != authorId) {
             let fetchedData = await fetchAuthorStories(authorId)
-            console.log(fetchedData)
             fetched = fetchedData.stories
             setFetchedInitialStory(true)
         }
@@ -189,10 +160,8 @@ const MapPage = () => {
     }
 
     async function showAuthorPage (authorId) {
-        
         let fetched = await fetchAuthorStories(authorId)
         let storiesFetched = fetched.stories
-        console.log("author fetched", fetched)
 
         let maxLon = 0
         let minLon = 180
@@ -233,7 +202,6 @@ const MapPage = () => {
 
     async function fetchSubs() {
         let fetched = await getSubscribedAuthorsStoriesApi()
-        console.log(fetched)
         setStories(fetched.stories)
         return fetched
     }
@@ -325,7 +293,6 @@ const MapPage = () => {
                 if (searchParams.has("storyId")) {
                     let idStory = searchParams.get("storyId")
                     showAuthorStory(id, idStory)
-                    console.log('show story')
                 } else {
                     showAuthorPage(id)
                 }
@@ -349,7 +316,6 @@ const MapPage = () => {
         }
     }, [searchParams])
 
-
     async function createStory () {
         await createStoryApi(newStoryName, newStoryText, newStoryImages,
             newMarker.lng, newMarker.lat
@@ -364,21 +330,6 @@ const MapPage = () => {
 
         let id = newStories[newStories.length - 1].storyId
         setSearchParams({"storyId": id})
-        
-        // setShowStory(true)
-        // setSelectedMarkerIndex(newStories.length - 1)
-        // setStoryShowed(newStories[newStories.length - 1])
-        
-    }
-
-    async function getStoriesByAuthor (authorId) {
-        await fetchAuthorStories(authorId)
-        setShowStory(false)
-        setSelectedMarkerIndex(-1)
-        setStoryShowed(null)
-        setShowAuthor(true)
-        // setFetch(!fetch)
-        console.log("search", searchParams)
     }
 
     async function likeAndUpdate (storyId) {
@@ -430,7 +381,6 @@ const MapPage = () => {
             updated = await fetchData()
         }
         let story = updated.find(a => a.storyId == storyId)
-        console.log("new", story)
         setStoryShowed(story)
     }
 
@@ -479,8 +429,8 @@ const MapPage = () => {
             {((searchParams.has("authorId")) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
                 {(searchParams.has("authorId")) ? 
-                (author._id == searchParams.get("authorId") ? 'Отображаются истории, написанные Вами' : 'Вы просматриваете истории автора ' + authorShowed?.authorName) :
-                'Вы просматриваете истории авторов, на которых подписаны'}
+                (author._id == searchParams.get("authorId") ? 'Мои истории' : 'Истории автора ' + authorShowed?.authorName) :
+                'Моя лента'}
                 <CloseButton onClick={() => setSearchParams()} />
             </div>}
 
@@ -493,9 +443,6 @@ const MapPage = () => {
                     zoom: 9
                 }}
                 cursor={placeNewMarker ? (mapDrag ? 'grab' : 'url("/marker.png") 7 55, auto') : ''}
-                // latitude={latitude}
-                // longitude={longitude}
-                // zoom={zoom}
                 style={{width: '100%', height: '100vh', transitionDuration: '300ms'}}
                 mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
                 onClick={(c)=>{
@@ -514,9 +461,6 @@ const MapPage = () => {
                     })
 
                     let zoomValue = mymap.current.getZoom()
-
-                    console.log(c.lngLat.lat)
-                    console.log(c.lngLat.lng)
                     
                     mymap.current.flyTo({
                         center: [c.lngLat.lng, c.lngLat.lat],
@@ -599,26 +543,8 @@ const MapPage = () => {
                     >
                     <Pin selected={true} />
                 </Marker>}
-                {/* <Popup
-                    anchor="top"
-                    latitude={55.75}
-                    longitude={37.61}
-                    onClose={() => {console.log('onClose')}}
-                >
-                    <div>
-                    {'City'}, {'State'} |{' ??'}
-                    <a
-                        target="_new"
-                        href={`http://en.wikipedia.org/w/index.php?title=Special:Search&search=${'Moscow'}`}
-                    >
-                        Wikipedia
-                    </a>
-                    </div>
-                    <img width="100%" src={'./assets/react.svg'} />
-                </Popup> */}
             </Map>
         </div>
-
 
         {!isLoaded &&
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
@@ -626,9 +552,7 @@ const MapPage = () => {
         </div>}
         {isLoaded &&
         <div className='rightBlock' style={{backgroundColor: 'white', width: '500px'}}>
-
             <div className="topHolder">
-                {/* <Button onClick={() => navigate(-1)}>back</Button> */}
                 {!newMarker && 
                 <button className='mapButton' onClick={()=>{
                     setShowStory(false)
@@ -645,10 +569,7 @@ const MapPage = () => {
                     {placeNewMarker ? 'Отменить' : 'Создать историю'}
                 </button>}
                 <List size={24} className='menuButton' onClick={() => setShowMenu(true)} />
-                
-             
             </div>
-
 
             {/* НОВАЯ ИСТОРИЯ */}
             {newMarker &&
@@ -671,8 +592,6 @@ const MapPage = () => {
                                 onChange={e => setNewStoryImages(e.target.files)}
                             />
                         </Form.Group>
-                        {/* <Form.Control onChange={e => setNewStoryImages(e.target.value)} */}
-                        {/* value={""} /> */}
                     </div>
                     <div className="newStoryButtons">
                         <button onClick={createStory}>
@@ -712,8 +631,6 @@ const MapPage = () => {
                     }
                     setShowStory(false)
                     setSelectedMarkerIndex(-1)
-
-                    deleteSearchParamsTagAll("storyId")
                     goBack()
                 }} />
 
@@ -812,7 +729,6 @@ const MapPage = () => {
                             }} />
                         </div>
                 </div>
-                
             </div>
             }
 
@@ -835,8 +751,6 @@ const MapPage = () => {
                 </Button>
                 </Modal.Footer>
             </Modal>
-
-
 
             {/* СТРАНИЦА АВТОРА */}
             {showAuthor &&
@@ -868,12 +782,7 @@ const MapPage = () => {
                     {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
                         return(
                             <div className="authorStory" key={i} onClick={() => {
-                                    // console.log("??")
-                                    // setLastCenter(mymap.current.getCenter())
-                                    // setLastZoom(mymap.current.getZoom())
-                                
                                 addOrUpdateSearchParam("storyId", story?.storyId)
-                                // makeStoryShow(stories, story.storyId)
                             }}>
                                 <div className="authorStoryName">{story?.storyName}</div>
                                 <div className="authorStoryBody">
@@ -903,7 +812,7 @@ const MapPage = () => {
                     goBack()
                 }} />
             <div className="subsPageTitle">
-                Ваша лента
+                Моя лента
             </div>
             {stories.length < 1 &&
             <div className="subsEmpty">
@@ -944,8 +853,6 @@ const MapPage = () => {
         </div>}
         </div>
         }
-
-
 
         <Offcanvas show={showMenu} onHide={() => setShowMenu(false)} placement='end'>
             <Offcanvas.Header closeButton>

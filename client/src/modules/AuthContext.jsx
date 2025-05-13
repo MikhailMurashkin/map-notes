@@ -46,7 +46,6 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-        console.log("login")
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -69,7 +68,7 @@ const AuthProvider = ({ children }) => {
       console.error('Login error:', error);
       throw error;
     }
-  };
+  }
 
   const register = async (name, email, password) => {
     try {

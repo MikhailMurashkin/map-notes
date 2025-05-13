@@ -7,7 +7,6 @@ const authRoutes = express.Router()
 
 authRoutes.post('/register', async (req, res) => {
     try {
-        console.log("register")
         const { name, email, password } = req.body;
 
         const authorExists = await Author.findOne({ email });
