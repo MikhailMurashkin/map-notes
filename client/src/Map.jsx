@@ -18,7 +18,7 @@ import { Button, Form, Modal, Carousel, Offcanvas,  CloseButton, ListGroup } fro
 import { ArrowLeft, List, BoxArrowRight, HandThumbsDownFill, 
     HandThumbsUpFill, ArrowUpCircleFill, ThreeDots, Trash3 } from 'react-bootstrap-icons'
 
-import Pin from './assets/pin'
+import Pin from './modules/pin'
 import Comments from './Comments'
 import Loading from './Loading'
 
@@ -28,7 +28,6 @@ import Loading from './Loading'
 const MapPage = () => {
     const { login, author, logout } = useContext(AuthContext);
 
-    // const {mymap} = useMap("mymap")
     const mymap = useRef(null)
 
     const [searchParams, setSearchParams] = useSearchParams()
@@ -72,7 +71,7 @@ const MapPage = () => {
 
     const [isLoaded, setIsLoaded] = useState(false)
 
-    async function fetchData(){
+    async function fetchAllStories(){
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
         
@@ -142,7 +141,7 @@ const MapPage = () => {
 
     async function fetchAndSetStory (storyId) {
         let fetched = stories
-            fetched = await fetchData()
+            fetched = await fetchAllStories()
         let arr = new Array(...fetched)
         makeStoryShow(arr, storyId)
     }
@@ -262,7 +261,7 @@ const MapPage = () => {
     }
 
     async function showMain() {
-        await fetchData()
+        await fetchAllStories()
         setShowStory(false)
         setStoryShowed(null)
         setSelectedMarkerIndex(-1)
@@ -320,7 +319,7 @@ const MapPage = () => {
         await createStoryApi(newStoryName, newStoryText, newStoryImages,
             newMarker.lng, newMarker.lat
         )
-        let newStories = await fetchData()
+        let newStories = await fetchAllStories()
 
         setNewMarker(false)
         setPlaceNewMarker(false)
@@ -343,7 +342,7 @@ const MapPage = () => {
             updated = await fetchAuthorStories(id)
             updated = updated.stories
         } else {
-            updated = await fetchData()
+            updated = await fetchAllStories()
         }
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
@@ -360,7 +359,7 @@ const MapPage = () => {
             updated = await fetchAuthorStories(id)
             updated = updated.stories
         } else {
-            updated = await fetchData()
+            updated = await fetchAllStories()
         }
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
@@ -378,7 +377,7 @@ const MapPage = () => {
             updated = await fetchAuthorStories(id)
             updated = updated.stories
         } else {
-            updated = await fetchData()
+            updated = await fetchAllStories()
         }
         let story = updated.find(a => a.storyId == storyId)
         setStoryShowed(story)
@@ -397,7 +396,7 @@ const MapPage = () => {
             updated = await fetchAuthorStories(authorId)
             updated = updated.stories
         } else {
-            updated = await fetchData()
+            updated = await fetchAllStories()
         }
         if (searchParams.has("storyId")) {
             let story = updated.find(a => a.storyId == storyShowed?.storyId)
@@ -430,7 +429,7 @@ const MapPage = () => {
             <div className="mapInformer">
                 {(searchParams.has("authorId")) ? 
                 (author._id == searchParams.get("authorId") ? 'Мои истории' : 'Истории автора ' + authorShowed?.authorName) :
-                'Моя лента'}
+                'Мои подписки'}
                 <CloseButton onClick={() => setSearchParams()} />
             </div>}
 
@@ -515,9 +514,7 @@ const MapPage = () => {
                                 })
                                 
                                 setZoomed(false)
-
                                 setShowAuthor(false)
-
                                 setShowStory(true)
                                 setStoryShowed(story)
                                 addOrUpdateSearchParam("storyId", story.storyId)
@@ -812,7 +809,7 @@ const MapPage = () => {
                     goBack()
                 }} />
             <div className="subsPageTitle">
-                Моя лента
+                Мои подписки
             </div>
             {stories.length < 1 &&
             <div className="subsEmpty">
@@ -891,7 +888,7 @@ const MapPage = () => {
                         setSearchParams({"subscriptions": true})
                         setLastCenter(mymap.current.getCenter())
                         setLastZoom(mymap.current.getZoom())
-                    }}>Моя лента</div>
+                    }}>Мои подписки</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>
                     Выйти

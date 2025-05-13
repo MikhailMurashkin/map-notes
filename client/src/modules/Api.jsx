@@ -64,6 +64,24 @@ export const getStoriesByAuthorIdApi = async (authorId) => {
   return data
 }
 
+
+export const getSubscribedAuthorsStoriesApi = async () => {
+  const response = await fetch(`${API_URL}/stories/getSubscribedAuthorsStories`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("token")}`,
+    }
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Не удалось загрузить ленту')
+  }
+
+  return data
+}
+
 export const likeStoryApi = async (storyId) => {
   const response = await fetch(`${API_URL}/stories/likeStory`, {
     method: 'POST',
@@ -144,24 +162,6 @@ export const commentApi = async (storyId, commentText) => {
 
   if (!response.ok) {
     throw new Error(data.message || 'Не удалось добавить комментарий к истории')
-  }
-
-  return data
-}
-
-
-export const getSubscribedAuthorsStoriesApi = async () => {
-  const response = await fetch(`${API_URL}/stories/getSubscribedAuthorsStories`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem("token")}`,
-    }
-  })
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Не удалось загрузить ленту')
   }
 
   return data

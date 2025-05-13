@@ -1,6 +1,5 @@
 import * as React from 'react'
 
-
 function Pin({ selected = false, hidden = false }) {
   if (selected) {
     return(
