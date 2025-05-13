@@ -169,9 +169,10 @@ button:hover {
 
 .backButton {
   position: absolute;
-  top: 20px;
+  top: 33px;
   left: 20px;
   cursor: pointer;
+  z-index: 3;
 }
 
 .menuButton {
@@ -684,7 +685,7 @@ button:hover {
 
 .authorPageDescription {
   font-style: oblique;
-  padding-bottom: 12px;
+  padding: 12px 0;
 }
 
 .loadingScreen {

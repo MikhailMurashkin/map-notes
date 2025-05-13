@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 
-function Pin({selected = false}) {
+function Pin({ selected = false, hidden = false }) {
   if (selected) {
     return(
       <img src="./story.png" width="31" height="30"
@@ -10,7 +10,7 @@ function Pin({selected = false}) {
     )
   } else {
       return (
-        <img src="./story.png" width="31" height="30" style={{cursor: "pointer"}} />
+        <img src="./story.png" width="31" height="30" style={{cursor: "pointer", opacity: hidden ? '0.3' : '1'}} />
       )
   }
 }

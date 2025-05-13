@@ -122,7 +122,22 @@ const MapPage = () => {
     }
 
     function goBack () {
-        navigate(-1)
+        if(searchParams.size == 2) {
+            searchParams.delete("storyId")
+            setSearchParams(searchParams)
+        } else if (searchParams.size == 1) {
+            searchParams.delete("storyId")
+            searchParams.delete("authorId")
+            searchParams.delete("subscriptions")
+            setSearchParams(searchParams)
+            console.log(lastCenter)
+            mymap.current.flyTo({
+                center: lastCenter,
+                zoom: lastZoom,
+                speed: 1.5,
+                curve: 1
+            })
+        }
     }
 
     function makeStoryShow(allStories, storyId) {
@@ -141,7 +156,6 @@ const MapPage = () => {
             setShowStory(true)
             setShowStoryMenu(false)
             setShowDeleteStoryModal(false)
-            console.log(story)
             mymap.current.flyTo({
                 center: [story.longitude, story.latitude],
                 zoom: 15,
@@ -243,7 +257,16 @@ const MapPage = () => {
                 minLat = fetchedStory.latitude < minLat ? fetchedStory.latitude : minLat
             })
 
-            if(storiesFetched.length == 1) {
+            if(storiesFetched.length == 0){
+                setTimeout(function() {
+                    mymap.current.flyTo({
+                        center: initialCoordinates,
+                        zoom: 9,
+                        speed: 1.5,
+                        curve: 1
+                    })
+                }, 1000)
+            } else if(storiesFetched.length == 1) {
                 setTimeout(function() {
                     mymap.current.flyTo({
                         center: [maxLon, maxLat],
@@ -453,7 +476,7 @@ const MapPage = () => {
     return (
         <div style={{display: 'flex'}}>
         <div style={{flex: 'auto', position: 'relative'}}>
-            {((searchParams.has("authorId") && authorShowed) || searchParams.has("subscriptions")) &&
+            {((searchParams.has("authorId")) || searchParams.has("subscriptions")) &&
             <div className="mapInformer">
                 {(searchParams.has("authorId")) ? 
                 (author._id == searchParams.get("authorId") ? 'Отображаются истории, написанные Вами' : 'Вы просматриваете истории автора ' + authorShowed?.authorName) :
@@ -479,8 +502,6 @@ const MapPage = () => {
                     if (!placeNewMarker) {
                         return
                     }
-
-                    console.log("NEW")
                     
                     if (!newMarker) {
                         setLastCenter(mymap.current.getCenter())
@@ -503,9 +524,6 @@ const MapPage = () => {
                         speed: 1.3,
                         curve: 1
                     })
-
-                    // setNewLatitude(c.lngLat.lat)
-                    // setNewLongitude(c.lngLat.lng)
                 }}
 
                 onDragStart={() => {
@@ -539,11 +557,8 @@ const MapPage = () => {
                                 e.originalEvent.stopPropagation()
 
                                 setSelectedMarkerIndex(key)
-
-
-                                setZoomed(false)
                                 
-                                if(!showStory) {
+                                if(!showStory && !showAuthor) {
                                     setLastCenter(mymap.current.getCenter())
                                     setLastZoom(mymap.current.getZoom())
                                 }
@@ -554,6 +569,7 @@ const MapPage = () => {
                                     speed: 1.5,
                                     curve: 1
                                 })
+                                
                                 setZoomed(false)
 
                                 setShowAuthor(false)
@@ -561,11 +577,9 @@ const MapPage = () => {
                                 setShowStory(true)
                                 setStoryShowed(story)
                                 addOrUpdateSearchParam("storyId", story.storyId)
-                                console.log(story)
-                                console.log("marker click")
                             }}
                         >
-                            <Pin selected={selectedMarkerIndex == key} mine={story.authoredByMe} />
+                            <Pin selected={selectedMarkerIndex == key} hidden={story.ammountOfDislikes - story.ammountOfLikes >= 3} />
                         </Marker>
                     )
                 })}
@@ -691,7 +705,6 @@ const MapPage = () => {
 
                 <ArrowLeft size={18} className='backButton' onClick={() => {
                     if (!zoomed) {
-                        console.log(lastCenter)
                         mymap.current.flyTo({
                             center: lastCenter,
                             zoom: lastZoom
@@ -712,7 +725,6 @@ const MapPage = () => {
                         {showStoryMenu &&
                         <div className="dotsMenu">
                             <ListGroup className='storyMenuList'>
-                                {/* <ListGroup.Item  className='storyMenuItem'>Редактировать историю......</ListGroup.Item> */}
                                 <ListGroup.Item className='storyMenuItem' style={{color: '#d00'}}
                                 onClick={() => {
                                     setShowStoryMenu(false)
@@ -726,19 +738,7 @@ const MapPage = () => {
                         </div>}
                     </div>
                 </div>}
-                {/* <button onClick={() => {
-                    if (!zoomed) {
-                        console.log(lastCenter)
-                        mymap.current.flyTo({
-                            center: lastCenter,
-                            zoom: lastZoom
-                        })
-                    }
-                    setShowStory(false)
-                    setSelectedMarkerIndex(-1)
-                }}>
-                    BACK
-                </button> */}
+
                 <div className="storyName">
                     {storyShowed?.storyName}
                 </div>
@@ -841,7 +841,7 @@ const MapPage = () => {
             {/* СТРАНИЦА АВТОРА */}
             {showAuthor &&
             <div className="authorPage">
-                <div className="authorPageName">
+                <div className="authorPageName" style={{paddingBottom: "0"}}>
                 <ArrowLeft size={18} className='backButton' onClick={() => {
 
                     setShowAuthor(false)
@@ -856,17 +856,21 @@ const MapPage = () => {
                 </div>
                 <div className="authorPageInfo">
                     <div className="authorPageSubcribers">
-                        {authorShowed?.subscribersAmmount} подписчиков
+                        Подписчики: {authorShowed?.subscribersAmmount}
                     </div>
-                    <div className="authorPageDescription">{authorShowed?.authorDescription}</div>
+                    <div className="authorPageDescription">
+                        <p style={{margin: "0", fontStyle: "normal"}}>О себе:</p>
+                        {authorShowed?.authorDescription}
+                    </div>
                 </div>
                 {stories.length > 0 &&
                 <div className="authorStoriesBlock">
                     {stories.sort((a, b) => a.createdAt > b.createdAt ? -1 : (a.createdAt < b.createdAt ? 1 : 0)).map((story, i) => {
                         return(
                             <div className="authorStory" key={i} onClick={() => {
-                                    setLastCenter(mymap.current.getCenter())
-                                    setLastZoom(mymap.current.getZoom())
+                                    // console.log("??")
+                                    // setLastCenter(mymap.current.getCenter())
+                                    // setLastZoom(mymap.current.getZoom())
                                 
                                 addOrUpdateSearchParam("storyId", story?.storyId)
                                 // makeStoryShow(stories, story.storyId)
@@ -892,7 +896,12 @@ const MapPage = () => {
 
             {/* ПОДПИСКИ */}
             {showSubscriptions &&
-            <div className="subsPage" style={{overflowY: 'scroll'}}>
+            <div className="subsPage" style={{overflowY: 'scroll', position: 'relative'}}>
+                <ArrowLeft size={18} className='backButton' onClick={() => {
+
+                    setShowSubscriptions(false)
+                    goBack()
+                }} />
             <div className="subsPageTitle">
                 Ваша лента
             </div>
@@ -951,18 +960,30 @@ const MapPage = () => {
                 </div>
                 <div className="menuLinks">
                     <div className="menuLink" onClick={() => {
-                        setShowMenu(false)
-                        setSearchParams()}}>
+                            setShowMenu(false)
+                            setSearchParams()
+                            setLastCenter(initialCoordinates)
+                            setLastZoom(9)
+                            mymap.current.flyTo({
+                                center: initialCoordinates,
+                                zoom: 9,
+                                speed: 1.5,
+                                curve: 1
+                            })
+                        }}>
                         Главная страница
                     </div>
                     <div className="menuLink" onClick={() => {
                         setShowMenu(false)
                         setSearchParams({"authorId": author._id})
-                        // showAuthorPage(null)
+                        setLastCenter(mymap.current.getCenter())
+                        setLastZoom(mymap.current.getZoom())
                     }}>Мои истории</div>
                     <div className="menuLink" onClick={() => {
                         setShowMenu(false)
                         setSearchParams({"subscriptions": true})
+                        setLastCenter(mymap.current.getCenter())
+                        setLastZoom(mymap.current.getZoom())
                     }}>Моя лента</div>
                 </div>
                 <div className="logoutButton" onClick={logout}>
