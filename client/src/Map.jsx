@@ -174,7 +174,9 @@ const MapPage = () => {
             minLat = fetchedStory.latitude < minLat ? fetchedStory.latitude : minLat
         })
 
-        if(storiesFetched.length == 1) {
+        if(storiesFetched.length == 0){
+            
+        } else if(storiesFetched.length == 1) {
             mymap.current.flyTo({
                 center: [maxLon, maxLat],
                 zoom: 15,
