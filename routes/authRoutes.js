@@ -7,51 +7,51 @@ const authRoutes = express.Router()
 
 authRoutes.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password } = req.body
 
-        const authorExists = await Author.findOne({ email });
+        const authorExists = await Author.findOne({ email })
         if (authorExists) {
-            return res.status(400).json({ message: 'Author already exists' });
+            return res.status(400).json({ message: 'Author already exists' })
         }
 
         const author = await Author.create({ name, email, password,
-            description: "", image: "" });
+            description: "", image: "" })
 
-        const token = jwt.sign({ id: author._id }, process.env.JWT_SECRET, { expiresIn: '10d' });
-        res.status(201).json({ token, authorId: author._id, name: author.name });
+        const token = jwt.sign({ id: author._id }, process.env.JWT_SECRET, { expiresIn: '10d' })
+        res.status(201).json({ token, authorId: author._id, name: author.name })
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error' })
     }
 });
 
 authRoutes.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const author = await Author.findOne({ email });
+        const { email, password } = req.body
+        const author = await Author.findOne({ email })
 
         if (!author || !(await author.comparePassword(password))) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            return res.status(400).json({ message: 'Invalid email or password' })
         }
 
-        const token = jwt.sign({ id: author._id }, process.env.JWT_SECRET, { expiresIn: '10d' });
-        res.json({ token, authorId: author._id, name: author.name });
+        const token = jwt.sign({ id: author._id }, process.env.JWT_SECRET, { expiresIn: '10d' })
+        res.json({ token, authorId: author._id, name: author.name })
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error' })
     }
 });
 
 authRoutes.get('/me', protect, async (req, res) => {
     try {
-      const author = await Author.findById(req.author).select('-password');
+      const author = await Author.findById(req.author).select('-password')
       if (!author) {
-        return res.status(404).json({ message: 'Пользователь не найден' });
+        return res.status(404).json({ message: 'Пользователь не найден' })
       }
-      res.status(200).json(author);
+      res.status(200).json(author)
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Ошибка сервера' });
+      console.error(error)
+      res.status(500).json({ message: 'Ошибка сервера' })
     }
 });
 
-export default authRoutes;
+export default authRoutes

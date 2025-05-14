@@ -175,7 +175,7 @@ const MapPage = () => {
         })
 
         if(storiesFetched.length == 0){
-            
+
         } else if(storiesFetched.length == 1) {
             mymap.current.flyTo({
                 center: [maxLon, maxLat],
@@ -189,7 +189,6 @@ const MapPage = () => {
                 padding: {top: 150, bottom: 150, left: 150, right: 150}
             })
         }
-        
 
         setShowStory(false)
         setStoryShowed(null)
@@ -226,12 +225,7 @@ const MapPage = () => {
             })
 
             if(storiesFetched.length == 0){
-                mymap.current.flyTo({
-                    center: initialCoordinates,
-                    zoom: 9,
-                    speed: 1.5,
-                    curve: 1
-                })
+
             } else if(storiesFetched.length == 1) {
                 mymap.current.flyTo({
                     center: [maxLon, maxLat],
@@ -240,7 +234,7 @@ const MapPage = () => {
                     curve: 1
                 })
             } else {
-                let bbox = [[minLon, minLat], [maxLon, maxLat]];
+                let bbox = [[minLon, minLat], [maxLon, maxLat]]
                 mymap.current.fitBounds(bbox, {
                     padding: {top: 150, bottom: 150, left: 150, right: 150}
                 })
@@ -512,13 +506,14 @@ const MapPage = () => {
                                     speed: 1.5,
                                     curve: 1
                                 })
-                                
                                 setZoomed(false)
-
                                 addOrUpdateSearchParam("storyId", story.storyId)
                             }}
                         >
-                            <Pin selected={selectedMarkerIndex == key} hidden={story.ammountOfDislikes - story.ammountOfLikes >= 3} />
+                            <Pin
+                                selected={selectedMarkerIndex == key}
+                                hidden={story.ammountOfDislikes - story.ammountOfLikes >= 3}
+                            />
                         </Marker>
                     )
                 })}

@@ -1,17 +1,16 @@
 import express from 'express'
+import multer from 'multer'
+import fs from 'fs'
 
 import Author from '../models/Author.js'
 import Story from '../models/Story.js'
 import Comment from '../models/Comment.js'
 import protect from '../middleware/authMiddleware.js'
+
 const storyRoutes = express.Router()
 
-
-import multer from 'multer'
-import fs from 'fs'
-const upload = multer({ dest: 'uploads/' })
-
-storyRoutes.post('/createStory', protect, upload.array('images', 12), async (req, res) => {
+storyRoutes.post('/createStory', protect, multer({ dest: 'uploads/' }).array('images', 12),
+  async (req, res) => {
     try {
         let imagesLinks = []
         req.files.forEach(image => {
@@ -25,7 +24,7 @@ storyRoutes.post('/createStory', protect, upload.array('images', 12), async (req
           src.pipe(dest)
         })
 
-        const { storyName, storyText, storyImages, longitude, latitude } = req.body
+        const { storyName, storyText, longitude, latitude } = req.body
 
         const story = await Story.create({
             storyName,
@@ -68,8 +67,7 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
       let stories = await Story.find({ })
       let authors = await Author.find({ })
       let comments = await Comment.find({ })
-
-
+      
       let storiesExtended = []
       stories.forEach(story => {
           story = story._doc
@@ -79,7 +77,9 @@ storyRoutes.get('/getStories', protect, async (req, res) => {
 
           story.authoredByMe = story.authorId == req.author
 
-          let storyAuthorSubscribers = authors[authors.findIndex(a => a.id == story.authorId)].subscribersId
+          let storyAuthorSubscribers = authors[
+            authors.findIndex(a => a.id == story.authorId)
+          ].subscribersId
           story.subscribedByMe = storyAuthorSubscribers.indexOf(req.author) == -1 ? false : true
 
           story.likedByMe = story.likedAuthorsId.indexOf(req.author) == -1 ? false : true
