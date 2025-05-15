@@ -21,7 +21,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-mongoose.connect(process.env.MONGO_URI && 'mongodb://localhost:27017', {
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017', {
     family: 4
 })
 .then(() => console.log('MongoDB connected'))
