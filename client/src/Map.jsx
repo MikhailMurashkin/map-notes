@@ -23,8 +23,6 @@ import Comments from './Comments'
 import Loading from './Loading'
 
 
-
-
 const MapPage = () => {
     const { login, author, logout } = useContext(AuthContext);
 
@@ -38,7 +36,6 @@ const MapPage = () => {
 
     const [initialCoordinates, setInitialCoordinates] = useState([37.61, 55.75])
 
-    const [showPanel, setShowPanel] = useState(false)
     const [placeNewMarker, setPlaceNewMarker] = useState(false)
     const [mapDrag, setMapDrag] = useState(false)
 
@@ -71,6 +68,43 @@ const MapPage = () => {
 
     const [isLoaded, setIsLoaded] = useState(false)
 
+    useEffect(() => {
+        setShowStory(false)
+        setShowAuthor(false)
+        setShowSubscriptions(false)
+        setIsLoaded(false)
+        if (searchParams.has("subscriptions")) {
+            makeSubsShowed()
+            return
+        }
+        if (searchParams.has("authorId")) {
+            let id = searchParams.get("authorId")
+            if (id != author._id) {
+                if (searchParams.has("storyId")) {
+                    let idStory = searchParams.get("storyId")
+                    showAuthorStory(id, idStory)
+                } else {
+                    showAuthorPage(id)
+                }
+            } else {
+                if (searchParams.has("storyId")) {
+                    let idStory = searchParams.get("storyId")
+                    showAuthorStory(null, idStory)
+                } else {
+                    showAuthorPage(null)
+                    
+                }
+            }
+        } else {
+            if (searchParams.has("storyId")) {
+                let id = searchParams.get("storyId")
+                fetchAndSetStory(id)
+            } else {
+                showMain()
+            }
+        }
+    }, [searchParams])
+
     async function fetchAllStories(){
         let storiesFetched = await getStoriesApi()
         setStories(storiesFetched)
@@ -86,7 +120,6 @@ const MapPage = () => {
         console.log(dataFetched)
         return dataFetched
     }
-
 
     function addOrUpdateSearchParam (tag, value) {
         setSearchParams((searchParams) => {
@@ -189,7 +222,6 @@ const MapPage = () => {
                 padding: {top: 150, bottom: 150, left: 150, right: 150}
             })
         }
-
         setShowStory(false)
         setStoryShowed(null)
         setSelectedMarkerIndex(-1)
@@ -270,44 +302,6 @@ const MapPage = () => {
         }
         setIsLoaded(true)
     }
-
-    useEffect(() => {
-        setShowStory(false)
-        setShowAuthor(false)
-        setShowSubscriptions(false)
-        setIsLoaded(false)
-        if (searchParams.has("subscriptions")) {
-            makeSubsShowed()
-            return
-        }
-        if (searchParams.has("authorId")) {
-            let id = searchParams.get("authorId")
-            if (id != author._id) {
-                if (searchParams.has("storyId")) {
-                    let idStory = searchParams.get("storyId")
-                    showAuthorStory(id, idStory)
-                } else {
-                    showAuthorPage(id)
-                }
-            } else {
-                if (searchParams.has("storyId")) {
-                    let idStory = searchParams.get("storyId")
-                    showAuthorStory(null, idStory)
-                } else {
-                    showAuthorPage(null)
-                    
-                }
-            }
-        }
-        else {
-            if (searchParams.has("storyId")) {
-                let id = searchParams.get("storyId")
-                fetchAndSetStory(id)
-            } else {
-                showMain()
-            }
-        }
-    }, [searchParams])
 
     async function createStory () {
         await createStoryApi(newStoryName, newStoryText, newStoryImages,
@@ -414,7 +408,6 @@ const MapPage = () => {
 
         return day + '.' + month + '.' + year + ' в ' + hour + ':' + minute
     }
-
 
     return (
         <div style={{display: 'flex'}}>
@@ -525,10 +518,9 @@ const MapPage = () => {
                     longitude={newMarker.lng}
                     anchor="bottom"
                     onClick={e => {
-                        e.originalEvent.stopPropagation();
+                        e.originalEvent.stopPropagation()
                         console.log("Marker")
-                        setPopupInfo("Marker");
-                        setShowPanel(true)
+                        setPopupInfo("Marker")
                     }}
                     >
                     <Pin selected={true} />
@@ -779,8 +771,10 @@ const MapPage = () => {
                                     {new Array(...story?.storyImages).length > 0 &&
                                     <div className="authorStoryImage">
                                         <img src={story.storyImages[0]} className='authorStoryImg' />
-                                        {new Array(...story?.storyImages).length > 1 &&
-                                        <div className="authorStoryImgOverlay">+{new Array(...story?.storyImages).length - 1}</div>
+                                        {new Array(...story?.storyImages).length > 0 &&
+                                        <div className="authorStoryImgOverlay">
+                                            {new Array(...story?.storyImages).length == 1 ? "" : `+${new Array(...story?.storyImages).length - 1}`}
+                                        </div>
                                         }
                                     </div>
                                     }
@@ -791,7 +785,6 @@ const MapPage = () => {
                     })}
                 </div>}
             </div>}
-
 
             {/* ПОДПИСКИ */}
             {showSubscriptions &&

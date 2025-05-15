@@ -44,24 +44,6 @@ storyRoutes.post('/createStory', protect, multer({ dest: 'uploads/' }).array('im
     }
 })
 
-storyRoutes.post('/deleteStory', protect, async (req, res) => {
-    try {
-        const { storyId } = req.body
-        let story = await Story.findOne({ storyId })
-
-        if (story.authorId != req.author) {
-          res.status(401).json({ message: 'Not allowed' })
-        }
-
-        await Story.deleteOne({ storyId })
-
-        res.status(201).json({ message: 'Story deleted' })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: 'Server error' })
-    }
-})
-
 storyRoutes.get('/getStories', protect, async (req, res) => {
   try {
       let stories = await Story.find({ })
@@ -235,6 +217,24 @@ storyRoutes.get('/getSubscribedAuthorsStories', protect, async (req, res) => {
       console.log(error)
       res.status(500).json({ message: 'Server error' })
   }
+})
+
+storyRoutes.post('/deleteStory', protect, async (req, res) => {
+    try {
+        const { storyId } = req.body
+        let story = await Story.findOne({ storyId })
+
+        if (story.authorId != req.author) {
+          res.status(401).json({ message: 'Not allowed' })
+        }
+
+        await Story.deleteOne({ storyId })
+
+        res.status(201).json({ message: 'Story deleted' })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error' })
+    }
 })
 
 storyRoutes.post('/likeStory', protect, async (req, res) => {

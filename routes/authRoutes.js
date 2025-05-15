@@ -23,7 +23,7 @@ authRoutes.post('/register', async (req, res) => {
         console.log(error)
         res.status(500).json({ message: 'Server error' })
     }
-});
+})
 
 authRoutes.post('/login', async (req, res) => {
     try {
@@ -39,7 +39,7 @@ authRoutes.post('/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error' })
     }
-});
+})
 
 authRoutes.get('/me', protect, async (req, res) => {
     try {
@@ -52,6 +52,6 @@ authRoutes.get('/me', protect, async (req, res) => {
       console.error(error)
       res.status(500).json({ message: 'Ошибка сервера' })
     }
-});
+})
 
 export default authRoutes
